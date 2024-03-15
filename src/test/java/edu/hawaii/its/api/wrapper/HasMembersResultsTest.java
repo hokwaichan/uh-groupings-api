@@ -21,8 +21,8 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class HasMembersResultsTest {
 
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uh-uids}")
+    private List<String> TEST_UIDS;
 
     @Value("${groupings.api.test.uh-numbers}")
     private List<String> TEST_NUMBERS;
@@ -60,7 +60,7 @@ public class HasMembersResultsTest {
         int i = 0;
         for (HasMemberResult result : hasMembersResults.getResults()) {
             assertEquals("IS_MEMBER", result.getResultCode());
-            assertEquals(TEST_USERNAMES.get(i), result.getUid());
+            assertEquals(TEST_UIDS.get(i), result.getUid());
             assertEquals(TEST_NUMBERS.get(i), result.getUhUuid());
             assertEquals(TEST_NAMES.get(i), result.getName());
             i++;
@@ -73,7 +73,7 @@ public class HasMembersResultsTest {
         i = 0;
         for (HasMemberResult result : hasMembersResults.getResults()) {
             assertEquals("IS_MEMBER", result.getResultCode());
-            assertEquals(TEST_USERNAMES.get(i), result.getUid());
+            assertEquals(TEST_UIDS.get(i), result.getUid());
             assertEquals(TEST_NUMBERS.get(i), result.getUhUuid());
             assertEquals(TEST_NAMES.get(i), result.getName());
             i++;

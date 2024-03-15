@@ -1,8 +1,5 @@
-
-
 package edu.hawaii.its.api.service;
 
-import edu.hawaii.its.api.type.Person;
 import edu.hawaii.its.api.wrapper.Subject;
 import edu.hawaii.its.api.wrapper.SubjectsResults;
 import org.apache.commons.logging.Log;
@@ -26,15 +23,6 @@ public class SubjectService {
     private GrouperService grouperService;
 
     private static final Log logger = LogFactory.getLog(SubjectService.class);
-
-    public Person getPerson(String uhIdentifier) {
-        Subject subject = getSubject(uhIdentifier);
-        if (subject.getResultCode().equals("SUBJECT_NOT_FOUND")) {
-            return new Person();
-        }
-        return new Person(subject.getName(), subject.getUhUuid(), subject.getUid(), subject.getFirstName(),
-                subject.getLastName());
-    }
 
     public boolean isValidIdentifier(String uhIdentifier) {
         return isValidSubject(getSubject(uhIdentifier));
@@ -73,6 +61,9 @@ public class SubjectService {
             return new Subject();
         }
         List<Subject> subjects = subjectsResults.getSubjects();
+        if (subjectsResults.getResultCode().equals("SUBJECT_NOT_FOUND")) {
+            return new Subject();
+        }
         if (subjects.size() >= 1) {
             return subjects.get(0);
         }

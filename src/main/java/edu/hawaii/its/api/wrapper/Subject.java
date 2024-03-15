@@ -28,6 +28,10 @@ public class Subject extends Results {
         return uhUuid != null ? uhUuid : "";
     }
 
+    public void setUhUuid(String uhUuid) {
+        wsSubject.setId(uhUuid);
+    }
+
     public String getUid() {
         if (wsSubject.getIdentifierLookup() != null) {
             return wsSubject.getIdentifierLookup();
@@ -35,17 +39,37 @@ public class Subject extends Results {
         return getAttributeValue(0);
     }
 
+    public void setUid(String uid) {
+        wsSubject.setIdentifierLookup(uid);
+    }
+
     public String getName() {
         String name = wsSubject.getName();
         return name != null ? name : "";
+    }
+
+    public void setName(String name) {
+        wsSubject.setName(name);
     }
 
     public String getFirstName() {
         return getAttributeValue(3);
     }
 
+    public void setFirstName(String firstName) {
+        String[] attributeValues = wsSubject.getAttributeValues();
+        attributeValues[3] = firstName;
+        wsSubject.setAttributeValues(attributeValues);
+    }
+
     public String getLastName() {
         return getAttributeValue(2);
+    }
+
+    public void setLastName(String lastName) {
+        String[] attributeValues = wsSubject.getAttributeValues();
+        attributeValues[2] = lastName;
+        wsSubject.setAttributeValues(attributeValues);
     }
 
     private String getAttributeValue(int index) {
@@ -63,8 +87,42 @@ public class Subject extends Results {
         return resultCode != null ? resultCode : "";
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        String name = getName();
+        String uid = getUid();
+        String uhUuid = getUhUuid();
+
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Subject other = (Subject) obj;
+        if (name == null) {
+            if (other.getName() != null)
+                return false;
+        } else if (!name.equals(other.getName()))
+            return false;
+        if (uid == null) {
+            if (other.getUid() != null)
+                return false;
+        } else if (!uid.equals(other.getUid()))
+            return false;
+        if (uhUuid == null) {
+            return other.getUhUuid() == null;
+        } else
+            return uhUuid.equals(other.getUhUuid());
+    }
+
     public String getSourceId() {
         return wsSubject.getSourceId();
+    }
+
+    @Override
+    public String toString() {
+        return "Subject [name=" + getName() + ", uhUuid=" + getUhUuid() + ", uid=" + getUid() + "]";
     }
 
     /**

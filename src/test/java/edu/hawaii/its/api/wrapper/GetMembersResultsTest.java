@@ -22,8 +22,8 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
 @ActiveProfiles("localTest")
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class GetMembersResultsTest {
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uh-uids}")
+    private List<String> TEST_UIDS;
 
     @Value("${groupings.api.test.uh-numbers}")
     private List<String> TEST_NUMBERS;
@@ -82,7 +82,7 @@ public class GetMembersResultsTest {
         Subject subject = includeMembers.get(0);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(0), subject.getUid());
+        assertEquals(TEST_UIDS.get(0), subject.getUid());
         assertEquals(TEST_NUMBERS.get(0), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(0), subject.getName());
         assertEquals(TEST_LASTNAMES.get(0), subject.getLastName());
@@ -91,7 +91,7 @@ public class GetMembersResultsTest {
         subject = includeMembers.get(1);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(1), subject.getUid());
+        assertEquals(TEST_UIDS.get(1), subject.getUid());
         assertEquals(TEST_NUMBERS.get(1), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(1), subject.getName());
         assertEquals(TEST_LASTNAMES.get(1), subject.getLastName());
@@ -109,7 +109,7 @@ public class GetMembersResultsTest {
         subject = excludeMembers.get(0);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(2), subject.getUid());
+        assertEquals(TEST_UIDS.get(2), subject.getUid());
         assertEquals(TEST_NUMBERS.get(2), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(2), subject.getName());
         assertEquals(TEST_LASTNAMES.get(2), subject.getLastName());
@@ -118,7 +118,7 @@ public class GetMembersResultsTest {
         subject = excludeMembers.get(1);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(3), subject.getUid());
+        assertEquals(TEST_UIDS.get(3), subject.getUid());
         assertEquals(TEST_NUMBERS.get(3), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(3), subject.getName());
         assertEquals(TEST_LASTNAMES.get(3), subject.getLastName());
@@ -136,7 +136,7 @@ public class GetMembersResultsTest {
         subject = ownersMembers.get(0);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(4), subject.getUid());
+        assertEquals(TEST_UIDS.get(4), subject.getUid());
         assertEquals(TEST_NUMBERS.get(4), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(4), subject.getName());
         assertEquals(TEST_LASTNAMES.get(4), subject.getLastName());

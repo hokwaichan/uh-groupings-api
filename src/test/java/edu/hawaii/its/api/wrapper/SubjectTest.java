@@ -23,8 +23,8 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class SubjectTest {
 
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uh-uids}")
+    private List<String> TEST_UIDS;
 
     @Value("${groupings.api.test.uh-numbers}")
     private List<String> TEST_NUMBERS;
@@ -60,7 +60,7 @@ public class SubjectTest {
 
     @Test
     public void accessors() {
-        String username = TEST_USERNAMES.get(0);
+        String uid = TEST_UIDS.get(0);
         String number = TEST_NUMBERS.get(0);
         String name = TEST_NAMES.get(0);
         String firstName = TEST_FIRSTNAMES.get(0);
@@ -71,7 +71,7 @@ public class SubjectTest {
         Subject subject = new Subject(wsSubject);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(username, subject.getUid());
+        assertEquals(uid, subject.getUid());
         assertEquals(number, subject.getUhUuid());
         assertEquals(name, subject.getName());
         assertEquals(firstName, subject.getFirstName());
@@ -83,7 +83,7 @@ public class SubjectTest {
         subject = new Subject(wsSubject);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(username, subject.getUid());
+        assertEquals(uid, subject.getUid());
         assertEquals(number, subject.getUhUuid());
         assertEquals(name, subject.getName());
         assertEquals(firstName, subject.getFirstName());

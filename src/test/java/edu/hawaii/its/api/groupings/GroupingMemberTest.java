@@ -25,8 +25,8 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class GroupingMemberTest {
 
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uh-uids}")
+    private List<String> TEST_UIDS;
 
     @Value("${groupings.api.test.uh-numbers}")
     private List<String> TEST_NUMBERS;
@@ -53,7 +53,7 @@ public class GroupingMemberTest {
         GroupingMember groupingMember = new GroupingMember(groupingGroupMember, "Include");
         assertNotNull(groupingMember);
 
-        assertEquals(TEST_USERNAMES.get(0), groupingMember.getUid());
+        assertEquals(TEST_UIDS.get(0), groupingMember.getUid());
         assertEquals(TEST_NUMBERS.get(0), groupingMember.getUhUuid());
         assertEquals(TEST_NAMES.get(0), groupingMember.getName());
         assertEquals("Include", groupingMember.getWhereListed());
