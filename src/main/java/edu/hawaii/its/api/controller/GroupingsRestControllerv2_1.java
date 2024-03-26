@@ -2,6 +2,7 @@ package edu.hawaii.its.api.controller;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.annotation.PostConstruct;
 
 import org.apache.commons.logging.Log;
@@ -472,7 +473,7 @@ public class GroupingsRestControllerv2_1 {
     @GetMapping(value = "/groupings/{path:[\\w-:.]+}/groupings-sync-destinations")
     public ResponseEntity<GroupingSyncDestinations> groupingsSyncDestinations(
             @RequestHeader(CURRENT_USER_KEY) String currentUser,
-            @PathVariable String path) {
+            @PathVariable String path) throws JsonProcessingException {
         logger.info("Entered REST groupingSyncDestinations...");
         return ResponseEntity
                 .ok()

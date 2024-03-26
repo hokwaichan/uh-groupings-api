@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +24,7 @@ public class GroupingOptAttributesTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.optIn-on.optOut-on");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
                 JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
@@ -35,7 +36,7 @@ public class GroupingOptAttributesTest {
     }
 
     @Test
-    public void optInOnOptOutOn() {
+    public void optInOnOptOutOn() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.optIn-on.optOut-on");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
                 JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
@@ -49,7 +50,7 @@ public class GroupingOptAttributesTest {
     }
 
     @Test
-    public void optInOnOptOutOff() {
+    public void optInOnOptOutOff() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.optIn-on.optOut-off");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
                 JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
@@ -63,7 +64,7 @@ public class GroupingOptAttributesTest {
     }
 
     @Test
-    public void optInOffOptOutOn() {
+    public void optInOffOptOutOn() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.optIn-off.optOut-on");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
                 JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
@@ -76,7 +77,7 @@ public class GroupingOptAttributesTest {
     }
 
     @Test
-    public void optInOffOptOutOff() {
+    public void optInOffOptOutOff() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.optIn-off.optOut-off");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
                 JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);

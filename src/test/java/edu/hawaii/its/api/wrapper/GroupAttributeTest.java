@@ -3,6 +3,7 @@ package edu.hawaii.its.api.wrapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +25,7 @@ public class GroupAttributeTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         String json = propertyLocator.find("ws.attribute.assign.success");
         WsAttributeAssign wsAttributeAssign = JsonUtil.asObject(json, WsAttributeAssign.class);
         assertNotNull(new GroupAttribute(wsAttributeAssign));
@@ -35,7 +36,7 @@ public class GroupAttributeTest {
     }
 
     @Test
-    public void accessors() {
+    public void accessors() throws JsonProcessingException {
         String json = propertyLocator.find("ws.attribute.assign.success");
         WsAttributeAssign wsAttributeAssign = JsonUtil.asObject(json, WsAttributeAssign.class);
         GroupAttribute groupAttribute = new GroupAttribute(wsAttributeAssign);

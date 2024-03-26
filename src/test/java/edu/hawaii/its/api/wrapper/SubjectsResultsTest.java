@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ public class SubjectsResultsTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.subjects.results.success");
         WsGetSubjectsResults wsGetSubjectsResults = JsonUtil.asObject(json, WsGetSubjectsResults.class);
         SubjectsResults subjectsResults = new SubjectsResults(wsGetSubjectsResults);
@@ -41,7 +42,7 @@ public class SubjectsResultsTest {
     }
 
     @Test
-    public void successfulResultsTest() {
+    public void successfulResultsTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.subjects.results.success");
         WsGetSubjectsResults wsGetSubjectsResults = JsonUtil.asObject(json, WsGetSubjectsResults.class);
         SubjectsResults subjectsResults = new SubjectsResults(wsGetSubjectsResults);
@@ -63,7 +64,7 @@ public class SubjectsResultsTest {
     }
 
     @Test
-    public void failedResultsTest() {
+    public void failedResultsTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.subjects.results.failure");
         WsGetSubjectsResults wsGetSubjectsResults = JsonUtil.asObject(json, WsGetSubjectsResults.class);
         SubjectsResults subjectsResults = new SubjectsResults(wsGetSubjectsResults);
@@ -74,7 +75,7 @@ public class SubjectsResultsTest {
     }
 
     @Test
-    public void emptyResultsTest() {
+    public void emptyResultsTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.subjects.results.empty");
         WsGetSubjectsResults wsGetSubjectsResults = JsonUtil.asObject(json, WsGetSubjectsResults.class);
         SubjectsResults subjectsResults = new SubjectsResults(wsGetSubjectsResults);

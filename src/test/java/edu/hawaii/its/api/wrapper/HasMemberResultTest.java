@@ -3,6 +3,7 @@ package edu.hawaii.its.api.wrapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ public class HasMemberResultTest {
     }
 
     @Test
-    public void nullSubject() {
+    public void nullSubject() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.result.null.subject.result.code");
         WsHasMemberResult wsHasMemberResult = JsonUtil.asObject(json, WsHasMemberResult.class);
         assertNotNull(wsHasMemberResult);

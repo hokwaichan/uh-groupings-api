@@ -1,5 +1,8 @@
 package edu.hawaii.its.api.wrapper;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Arrays;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
@@ -7,6 +10,8 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
 /**
  * A wrapper for WsSubject.
  */
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Subject extends Results {
 
     private final WsSubject wsSubject;
@@ -58,6 +63,9 @@ public class Subject extends Results {
 
     public void setFirstName(String firstName) {
         String[] attributeValues = wsSubject.getAttributeValues();
+        if (attributeValues == null) {
+            attributeValues = new String[4];
+        }
         attributeValues[3] = firstName;
         wsSubject.setAttributeValues(attributeValues);
     }
@@ -68,6 +76,9 @@ public class Subject extends Results {
 
     public void setLastName(String lastName) {
         String[] attributeValues = wsSubject.getAttributeValues();
+        if (attributeValues == null) {
+            attributeValues = new String[4];
+        }
         attributeValues[2] = lastName;
         wsSubject.setAttributeValues(attributeValues);
     }
@@ -85,6 +96,10 @@ public class Subject extends Results {
     public String getResultCode() {
         String resultCode = wsSubject.getResultCode();
         return resultCode != null ? resultCode : "";
+    }
+
+    public void setResultCode(String resultCode) {
+        wsSubject.setResultCode(resultCode);
     }
 
     @Override
@@ -117,7 +132,12 @@ public class Subject extends Results {
     }
 
     public String getSourceId() {
-        return wsSubject.getSourceId();
+        String sourceId = wsSubject.getSourceId();
+        return sourceId != null ? sourceId : "";
+    }
+
+    public void setSourceId(String sourceId) {
+        wsSubject.setSourceId(sourceId);
     }
 
     @Override

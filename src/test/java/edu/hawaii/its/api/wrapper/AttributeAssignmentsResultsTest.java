@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ public class AttributeAssignmentsResultsTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyLocator.find("attribute.assignment.opt.in.result");
         WsGetAttributeAssignmentsResults wsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         assertNotNull(wsResults);
@@ -55,7 +56,7 @@ public class AttributeAssignmentsResultsTest {
     }
 
     @Test
-    public void getOwnerGroupNamesTest() {
+    public void getOwnerGroupNamesTest() throws JsonProcessingException {
         String json = propertyLocator.find("attribute.assignment.opt.in.result");
         WsGetAttributeAssignmentsResults wsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         assertNotNull(wsResults);
@@ -79,7 +80,7 @@ public class AttributeAssignmentsResultsTest {
     }
 
     @Test
-    public void isAttributeDefNameTest() {
+    public void isAttributeDefNameTest() throws JsonProcessingException {
         String json = propertyLocator.find("attribute.assignment.opt.in.result");
         WsGetAttributeAssignmentsResults wsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         assertNotNull(wsResults);
@@ -109,7 +110,7 @@ public class AttributeAssignmentsResultsTest {
     }
 
     @Test
-    public void getGroupNamesTest() {
+    public void getGroupNamesTest() throws JsonProcessingException {
         String json = propertyLocator.find("attribute.assignment.opt.in.result");
         WsGetAttributeAssignmentsResults wsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         assertNotNull(wsResults);
@@ -129,7 +130,7 @@ public class AttributeAssignmentsResultsTest {
     }
 
     @Test
-    public void getGroupNamesAndDescriptionsTest() {
+    public void getGroupNamesAndDescriptionsTest() throws JsonProcessingException {
         String json = propertyLocator.find("attribute.assignment.opt.in.result");
         WsGetAttributeAssignmentsResults wsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         assertNotNull(wsResults);

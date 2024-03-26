@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ public class GroupAttributeResultsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.success");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
                 JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);

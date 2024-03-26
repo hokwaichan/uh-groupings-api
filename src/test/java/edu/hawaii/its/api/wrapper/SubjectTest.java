@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +49,7 @@ public class SubjectTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyLocator.find("ws.subject.success.uid");
         WsSubject wsSubject = JsonUtil.asObject(json, WsSubject.class);
         Subject subject = new Subject(wsSubject);
@@ -59,7 +60,7 @@ public class SubjectTest {
     }
 
     @Test
-    public void accessors() {
+    public void accessors() throws JsonProcessingException {
         String uid = TEST_UIDS.get(0);
         String number = TEST_NUMBERS.get(0);
         String name = TEST_NAMES.get(0);

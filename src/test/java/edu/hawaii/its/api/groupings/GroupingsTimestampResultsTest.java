@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +35,7 @@ public class GroupingsTimestampResultsTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResult = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -46,7 +47,7 @@ public class GroupingsTimestampResultsTest {
     }
 
     @Test
-    public void timeWasUpdated() {
+    public void timeWasUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResult = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -72,7 +73,7 @@ public class GroupingsTimestampResultsTest {
     }
 
     @Test
-    public void timeWasNotUpdated() {
+    public void timeWasNotUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.not.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResult = new UpdatedTimestampResults(wsAssignAttributesResults);

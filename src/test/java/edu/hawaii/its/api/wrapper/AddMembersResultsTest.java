@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,7 @@ public class AddMembersResultsTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyLocator.find("ws.add.member.results.success");
         WsAddMemberResults wsAddMemberResults = JsonUtil.asObject(json, WsAddMemberResults.class);
         AddMembersResults addMembersResults = new AddMembersResults(wsAddMemberResults);
@@ -48,7 +49,7 @@ public class AddMembersResultsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = propertyLocator.find("ws.add.member.results.success");
         WsAddMemberResults wsAddMemberResults = JsonUtil.asObject(json, WsAddMemberResults.class);
         AddMembersResults addMembersResults = new AddMembersResults(wsAddMemberResults);

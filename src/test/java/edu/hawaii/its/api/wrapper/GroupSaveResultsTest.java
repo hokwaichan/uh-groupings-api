@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ public class GroupSaveResultsTest {
     }
 
     @Test
-    public void constructor (){
+    public void constructor () throws JsonProcessingException {
         assertNotNull(new GroupSaveResults(null));
 
         String json = propertyValue("ws.group.save.results.description.updated");
@@ -37,7 +38,7 @@ public class GroupSaveResultsTest {
     }
 
     @Test
-    public void descriptionUpdated() {
+    public void descriptionUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.group.save.results.description.updated");
         WsGroupSaveResults wsGroupSaveResults = JsonUtil.asObject(json, WsGroupSaveResults.class);
         GroupSaveResults groupSaveResults = new GroupSaveResults(wsGroupSaveResults);
@@ -46,7 +47,7 @@ public class GroupSaveResultsTest {
     }
 
     @Test
-    public void descriptionNotUpdated() {
+    public void descriptionNotUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.group.save.results.description.not.updated");
         WsGroupSaveResults wsGroupSaveResults = JsonUtil.asObject(json, WsGroupSaveResults.class);
         GroupSaveResults groupSaveResults = new GroupSaveResults(wsGroupSaveResults);
@@ -55,7 +56,7 @@ public class GroupSaveResultsTest {
     }
 
     @Test
-    public void emptyGroup() {
+    public void emptyGroup() throws JsonProcessingException {
         String json = propertyValue("ws.group.save.results.description.empty.results");
         WsGroupSaveResults wsGroupSaveResults = JsonUtil.asObject(json, WsGroupSaveResults.class);
         GroupSaveResults groupSaveResults = new GroupSaveResults(wsGroupSaveResults);

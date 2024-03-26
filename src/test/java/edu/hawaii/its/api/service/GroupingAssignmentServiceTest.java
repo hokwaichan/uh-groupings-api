@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -47,7 +48,7 @@ class GroupingAssignmentServiceTest {
 
     //TODO: finish unit test in GROUPINGS-1540
     @Test
-    public void makeGroupsTest() {
+    public void makeGroupsTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.members.results.success");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         GetMembersResults getMembersResults = new GetMembersResults(wsGetMembersResults);

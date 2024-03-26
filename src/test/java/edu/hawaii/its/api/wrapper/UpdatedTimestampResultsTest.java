@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -44,7 +45,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void timeWasUpdated() {
+    public void timeWasUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -69,7 +70,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void multipleTimeWasUpdated() {
+    public void multipleTimeWasUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.multiple.time.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -93,7 +94,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void timeWasNotUpdated() {
+    public void timeWasNotUpdated() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.multiple.time.not.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -118,7 +119,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void emptyGroups() {
+    public void emptyGroups() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.empty.groups.empty.results");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -131,7 +132,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void emptyResults() {
+    public void emptyResults() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.empty.groups.empty.results");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);
@@ -151,7 +152,7 @@ public class UpdatedTimestampResultsTest {
     }
 
     @Test
-    public void emptyValues() {
+    public void emptyValues() throws JsonProcessingException {
         String json = propertyValue("ws.assign.attributes.results.time.empty.values");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         UpdatedTimestampResults updatedTimestampResults = new UpdatedTimestampResults(wsAssignAttributesResults);

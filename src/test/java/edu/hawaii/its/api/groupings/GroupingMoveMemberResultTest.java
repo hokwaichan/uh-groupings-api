@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ public class GroupingMoveMemberResultTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         assertNotNull(new GroupingMoveMemberResult());
 
         String json = propertyValue("ws.add.member.results.success");
@@ -53,7 +54,7 @@ public class GroupingMoveMemberResultTest {
     }
 
     @Test
-    public void successfulAccessors() {
+    public void successfulAccessors() throws JsonProcessingException {
         String json = propertyValue("ws.add.member.results.success");
         WsAddMemberResults wsAddMemberResults = JsonUtil.asObject(json, WsAddMemberResults.class);
         AddMemberResult addMemberResult = new AddMemberResult(wsAddMemberResults.getResults()[2], "group-path");

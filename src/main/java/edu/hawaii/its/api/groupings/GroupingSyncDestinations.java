@@ -1,5 +1,7 @@
 package edu.hawaii.its.api.groupings;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,7 +23,7 @@ public class GroupingSyncDestinations {
     private String groupingExtension;
 
     public GroupingSyncDestinations(FindAttributesResults findAttributesResults,
-            GroupAttributeResults groupAttributeResults) {
+            GroupAttributeResults groupAttributeResults) throws JsonProcessingException {
         setGroupingExtension(groupAttributeResults.getGroups());
         setGroupAttributes(groupAttributeResults.getGroupAttributes());
         setSyncDestination(findAttributesResults.getResults());
@@ -29,7 +31,7 @@ public class GroupingSyncDestinations {
 
     }
 
-    public GroupingSyncDestinations() {
+    public GroupingSyncDestinations() throws JsonProcessingException {
         setGroupingExtension(new ArrayList<>());
         setGroupAttributes(new ArrayList<>());
         setSyncDestination(new ArrayList<>());
@@ -48,7 +50,7 @@ public class GroupingSyncDestinations {
         this.resultCode = resultCode;
     }
 
-    private void setSyncDestination(List<AttributesResult> attributesResults) {
+    private void setSyncDestination(List<AttributesResult> attributesResults) throws JsonProcessingException {
         this.syncDestinations = new ArrayList<>();
         for (AttributesResult attributesResult : attributesResults) {
             GroupingSyncDestination groupingSyncDestination =

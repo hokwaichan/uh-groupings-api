@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ public class GroupsResultsTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyLocator.find("groups.results");
         WsGetGroupsResults wsGetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
         GroupsResults groupsResults = new GroupsResults(wsGetGroupsResults);
@@ -36,7 +37,7 @@ public class GroupsResultsTest {
     }
 
     @Test
-    public void groupPathsTest() {
+    public void groupPathsTest() throws JsonProcessingException {
         String json = propertyLocator.find("groups.results");
         WsGetGroupsResults wsGetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
         GroupsResults groupsResults = new GroupsResults(wsGetGroupsResults);

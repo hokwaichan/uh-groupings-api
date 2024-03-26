@@ -3,6 +3,7 @@ package edu.hawaii.its.api.wrapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,7 @@ public class AttributesResultTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         assertNotNull(new AttributesResult(null));
         String json = propertyLocator.find("ws.attribute.def.name.results.success");
         WsFindAttributeDefNamesResults wsFindAttributeDefNamesResults =

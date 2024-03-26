@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,7 @@ public class GroupingRemoveResultsTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         String json = propertyValue("ws.delete.member.results.success");
         WsDeleteMemberResults wsDeleteMemberResults = JsonUtil.asObject(json, WsDeleteMemberResults.class);
         assertNotNull(wsDeleteMemberResults);
@@ -41,7 +42,7 @@ public class GroupingRemoveResultsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = propertyValue("ws.delete.member.results.success");
         WsDeleteMemberResults wsDeleteMemberResults = JsonUtil.asObject(json, WsDeleteMemberResults.class);
         RemoveMembersResults removeMembersResults = new RemoveMembersResults(wsDeleteMemberResults);
@@ -56,7 +57,7 @@ public class GroupingRemoveResultsTest {
     }
 
     @Test
-    public void add() {
+    public void add() throws JsonProcessingException {
         String json = propertyValue("ws.delete.member.results.success");
         WsDeleteMemberResults wsDeleteMemberResults = JsonUtil.asObject(json, WsDeleteMemberResults.class);
         RemoveMembersResults removeMembersResults = new RemoveMembersResults(wsDeleteMemberResults);

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ public class AssignAttributesResultsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = propertyLocator.find("ws.assign.attributes.results.turn.off.opt.in.success");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         AssignAttributesResults assignAttributesResults = new AssignAttributesResults(wsAssignAttributesResults);

@@ -8,6 +8,7 @@ import edu.hawaii.its.api.wrapper.AttributesResult;
 import edu.hawaii.its.api.wrapper.FindAttributesResults;
 import edu.hawaii.its.api.wrapper.GetMembersResults;
 import edu.hawaii.its.api.wrapper.GroupAttributeResults;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +77,8 @@ public class GroupingOwnerService {
     /**
      * Get a list of sync-destinations for a selected grouping.
      */
-    public GroupingSyncDestinations groupingsSyncDestinations(String currentUser, String groupingPath) {
+    public GroupingSyncDestinations groupingsSyncDestinations(String currentUser, String groupingPath)
+            throws JsonProcessingException {
         log.debug(String.format("groupingsSyncDestinations; currentUser: %s; groupingPath: %s;", currentUser,
                 groupingPath));
         FindAttributesResults findAttributesResults = grouperService.findAttributesResults(

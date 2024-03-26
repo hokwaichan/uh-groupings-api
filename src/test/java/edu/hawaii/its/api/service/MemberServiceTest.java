@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doReturn;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class MemberServiceTest {
     }
 
     @Test
-    public void isAdminTest() {
+    public void isAdminTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -64,7 +65,7 @@ public class MemberServiceTest {
     }
 
     @Test
-    public void isOwnerTest() {
+    public void isOwnerTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -79,7 +80,7 @@ public class MemberServiceTest {
     }
 
     @Test
-    public void isIncludeTest() {
+    public void isIncludeTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -91,7 +92,7 @@ public class MemberServiceTest {
     }
 
     @Test
-    public void isExcludeTest() {
+    public void isExcludeTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -103,7 +104,7 @@ public class MemberServiceTest {
     }
 
     @Test
-    public void isMemberTest() {
+    public void isMemberTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -115,7 +116,7 @@ public class MemberServiceTest {
     }
 
     @Test
-    public void isMemberNullTest() {
+    public void isMemberNullTest() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.null.group");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);

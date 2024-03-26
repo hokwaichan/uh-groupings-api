@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +83,7 @@ public class TestGroupingOwnerService {
     }
 
     @Test
-    public void groupingsSyncDestinations() {
+    public void groupingsSyncDestinations() throws JsonProcessingException {
         GroupingSyncDestinations groupingSyncDestinations = ownerService.groupingsSyncDestinations(
                 ADMIN,
                 GROUPING);

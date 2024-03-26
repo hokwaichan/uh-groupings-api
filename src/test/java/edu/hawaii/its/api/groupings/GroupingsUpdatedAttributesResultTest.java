@@ -3,6 +3,7 @@ package edu.hawaii.its.api.groupings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +23,7 @@ public class GroupingsUpdatedAttributesResultTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         assertNotNull(new GroupingUpdatedAttributesResult());
         assertNotNull(new GroupingUpdatedAttributesResult(null));
         String json = propertyLocator.find("ws.assign.attributes.results.turn.off.opt.in.success");

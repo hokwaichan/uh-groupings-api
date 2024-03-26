@@ -7,6 +7,8 @@ import edu.hawaii.its.api.wrapper.FindAttributesResults;
 import edu.hawaii.its.api.wrapper.GroupAttributeResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsFindAttributeDefNamesResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +40,7 @@ public class TestGroupingSyncDestinations {
     private GrouperService grouperService;
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         FindAttributesResults findAttributesResults = grouperService.findAttributesResults(
                 SYNC_DESTINATIONS_CHECKBOXES,
                 SYNC_DESTINATIONS_LOCATION);
@@ -54,7 +56,7 @@ public class TestGroupingSyncDestinations {
     }
 
     @Test
-    public void success() {
+    public void success() throws JsonProcessingException {
         FindAttributesResults findAttributesResults = grouperService.findAttributesResults(
                 SYNC_DESTINATIONS_CHECKBOXES,
                 SYNC_DESTINATIONS_LOCATION);
@@ -84,7 +86,7 @@ public class TestGroupingSyncDestinations {
     }
 
     @Test
-    public void failure() {
+    public void failure() throws JsonProcessingException {
         GroupingSyncDestinations groupingSyncDestinations =
                 new GroupingSyncDestinations(new FindAttributesResults(new WsFindAttributeDefNamesResults()),
                         new GroupAttributeResults(new WsGetAttributeAssignmentsResults()));

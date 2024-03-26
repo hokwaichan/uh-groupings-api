@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public class AddMemberResultTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         assertNotNull(new AddMemberResult(null, null));
         assertNotNull(new AddMemberResult());
         String json = propertyValue("ws.add.member.results.success");

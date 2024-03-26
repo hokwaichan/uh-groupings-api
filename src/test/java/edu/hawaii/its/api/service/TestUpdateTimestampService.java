@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -42,7 +43,7 @@ public class TestUpdateTimestampService {
     }
 
     @Test
-    public void updateFailure() {
+    public void updateFailure() throws JsonProcessingException {
         String json = propertyValue("ws.add.member.results.failure");
         WsAddMemberResults wsAddMemberResults = JsonUtil.asObject(json, WsAddMemberResults.class);
         AddMembersResults addMembersResults = new AddMembersResults(wsAddMemberResults);
@@ -55,7 +56,7 @@ public class TestUpdateTimestampService {
     }
 
     @Test
-    public void updateSuccess() {
+    public void updateSuccess() throws JsonProcessingException {
         String json = propertyValue("ws.add.member.results.success.include.timestamp");
         GroupingAddResults groupingResult = JsonUtil.asObject(json, GroupingAddResults.class);
         GroupingTimestampResults groupingsTimestampResults = timestampService.update(groupingResult);
@@ -65,7 +66,7 @@ public class TestUpdateTimestampService {
     }
 
     @Test
-    public void updateOwnersList() {
+    public void updateOwnersList() throws JsonProcessingException {
         String json = propertyValue("ws.add.member.results.success.owners.timestamp");
         GroupingAddResults groupingResult = JsonUtil.asObject(json, GroupingAddResults.class);
         GroupingTimestampResults groupingsTimestampResults = timestampService.update(groupingResult);
@@ -77,7 +78,7 @@ public class TestUpdateTimestampService {
     }
 
     @Test
-    public void updateAdminTest() {
+    public void updateAdminTest() throws JsonProcessingException {
         String json = propertyValue("ws.add.member.results.success.admin.timestamp");
         WsAddMemberResults wsAddMemberResults = JsonUtil.asObject(json, WsAddMemberResults.class);
         AddMembersResults addMembersResults = new AddMembersResults(wsAddMemberResults);

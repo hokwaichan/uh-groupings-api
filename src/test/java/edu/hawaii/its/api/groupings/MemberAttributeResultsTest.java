@@ -1,5 +1,6 @@
 package edu.hawaii.its.api.groupings;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import edu.hawaii.its.api.util.JsonUtil;
@@ -30,7 +31,7 @@ public class MemberAttributeResultsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = properties.getProperty("ws.get.subjects.results.success");
         WsGetSubjectsResults wsGetSubjectsResults = JsonUtil.asObject(json, WsGetSubjectsResults.class);
         SubjectsResults subjectsResults = new SubjectsResults(wsGetSubjectsResults);

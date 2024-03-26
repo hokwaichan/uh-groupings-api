@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +46,7 @@ public class GroupingMemberTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = properties.getProperty("ws.subject.success.uid");
         WsSubject wsSubject = JsonUtil.asObject(json, WsSubject.class);
         Subject subject = new Subject(wsSubject);

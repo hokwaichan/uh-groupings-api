@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ public class GroupingGroupsMembersTest {
     }
 
     @Test
-    public void successfulResult() {
+    public void successfulResult() throws JsonProcessingException {
         String onlyInclude = "testiwta";
         String basisAndInclude = "testiwtb";
         String onlyExclude = "testiwtc";

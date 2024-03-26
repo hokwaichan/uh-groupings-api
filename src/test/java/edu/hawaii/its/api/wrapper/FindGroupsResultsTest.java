@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,7 @@ public class FindGroupsResultsTest {
     }
 
     @Test
-    public void getDescription() {
+    public void getDescription() throws JsonProcessingException {
         String json = propertyLocator.find("find.groups.results.description");
         FindGroupsResults results =
                 new FindGroupsResults(asObject(json, WsFindGroupsResults.class));
@@ -57,7 +58,7 @@ public class FindGroupsResultsTest {
     }
 
     @Test
-    public void getNullDescription() {
+    public void getNullDescription() throws JsonProcessingException {
         String json = propertyLocator.find("find.groups.results.null.description");
         FindGroupsResults results =
                 new FindGroupsResults(asObject(json, WsFindGroupsResults.class));
@@ -68,7 +69,7 @@ public class FindGroupsResultsTest {
     }
 
     @Test
-    public void getEmptyDescription() {
+    public void getEmptyDescription() throws JsonProcessingException {
         String json = propertyLocator.find("find.groups.results.empty.description");
         WsFindGroupsResults wsFindGroupsResults = asObject(json, WsFindGroupsResults.class);
         FindGroupsResults results = new FindGroupsResults(wsFindGroupsResults);
@@ -79,7 +80,7 @@ public class FindGroupsResultsTest {
     }
 
     @Test
-    public void onFailure() {
+    public void onFailure() throws JsonProcessingException {
         String json = propertyLocator.find("find.groups.results.failure");
         WsFindGroupsResults wsFindGroupsResults = asObject(json, WsFindGroupsResults.class);
         FindGroupsResults results = new FindGroupsResults(wsFindGroupsResults);

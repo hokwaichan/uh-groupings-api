@@ -3,6 +3,7 @@ package edu.hawaii.its.api.wrapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ public class GetGroupsResultsTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         assertNotNull(new GetGroupsResults(null));
         String json = propertyLocator.find("ws.get.groups.results.success");
         WsGetGroupsResults wsGetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
@@ -30,7 +31,7 @@ public class GetGroupsResultsTest {
     }
 
     @Test
-    public void successfulResults() {
+    public void successfulResults() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.groups.results.success");
         WsGetGroupsResults wsGetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
         GetGroupsResults getGroupsResults = new GetGroupsResults(wsGetGroupsResults);
@@ -42,7 +43,7 @@ public class GetGroupsResultsTest {
     }
 
     @Test
-    public void emptyGroups() {
+    public void emptyGroups() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.groups.results.empty.groups");
         WsGetGroupsResults wsGetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
         GetGroupsResults getGroupsResults = new GetGroupsResults(wsGetGroupsResults);
@@ -53,7 +54,7 @@ public class GetGroupsResultsTest {
     }
 
     @Test
-    public void emptyResults() {
+    public void emptyResults() throws JsonProcessingException {
         String json = propertyLocator.find("ws.empty.results");
         WsGetGroupsResults wsGetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
         GetGroupsResults getGroupsResults = new GetGroupsResults(wsGetGroupsResults);

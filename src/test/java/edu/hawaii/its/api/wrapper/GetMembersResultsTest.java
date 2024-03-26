@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,7 @@ public class GetMembersResultsTest {
     }
 
     @Test
-    public void constructor() {
+    public void constructor() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.members.results.success");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         assertNotNull(wsGetMembersResults);
@@ -58,7 +59,7 @@ public class GetMembersResultsTest {
     }
 
     @Test
-    public void successfulResults() {
+    public void successfulResults() throws JsonProcessingException {
         String groupingPath = "grouping-path";
 
         String json = propertyLocator.find("ws.get.members.results.success");
@@ -144,7 +145,7 @@ public class GetMembersResultsTest {
     }
 
     @Test
-    public void noMembers() {
+    public void noMembers() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.members.results.no.members");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         assertNotNull(wsGetMembersResults);
@@ -162,7 +163,7 @@ public class GetMembersResultsTest {
     }
 
     @Test
-    public void multipleGroupsQueried() {
+    public void multipleGroupsQueried() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.members.results.success.multiple.groups");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         assertNotNull(wsGetMembersResults);
@@ -178,7 +179,7 @@ public class GetMembersResultsTest {
     }
 
     @Test
-    public void nullValues() {
+    public void nullValues() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.members.results.null");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         GetMembersResults getMembersResults = new GetMembersResults(wsGetMembersResults);
@@ -192,7 +193,7 @@ public class GetMembersResultsTest {
     }
 
     @Test
-    public void emptyResults() {
+    public void emptyResults() throws JsonProcessingException {
         String json = propertyLocator.find("ws.empty.results");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         GetMembersResults getMembersResults = new GetMembersResults(wsGetMembersResults);

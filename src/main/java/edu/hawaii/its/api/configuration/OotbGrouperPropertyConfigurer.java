@@ -27,6 +27,8 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetSubjectsResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGroupSaveResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,7 +46,7 @@ class OotbGrouperPropertyConfigurer {
      */
 
     @Bean(name = "HasMembersResultsOOTBBean")
-    public HasMembersResults grouperHasMembersResultsOOTB() {
+    public HasMembersResults grouperHasMembersResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -52,7 +54,7 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "AddMemberResultsOOTBBean")
-    public AddMembersResults grouperAddMemberResultsOOTB() {
+    public AddMembersResults grouperAddMemberResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.add.member.results.success");
         WsAddMemberResults wsAddMemberResults = JsonUtil.asObject(json, WsAddMemberResults.class);
         AddMembersResults addMemberResults = new AddMembersResults(wsAddMemberResults);
@@ -60,7 +62,7 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "GetSubjectsResultsOOTBBean")
-    public SubjectsResults grouperGetSubjectsResultsOOTB() {
+    public SubjectsResults grouperGetSubjectsResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.subjects.results.success");
         WsGetSubjectsResults wsGetSubjectsResults = JsonUtil.asObject(json, WsGetSubjectsResults.class);
         SubjectsResults getSubjectsResults = new SubjectsResults(wsGetSubjectsResults);
@@ -68,7 +70,7 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "FindGroupsResultsOOTBBean")
-    public FindGroupsResults grouperFindGroupsResultsOOTB() {
+    public FindGroupsResults grouperFindGroupsResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("find.groups.results.description");
         WsFindGroupsResults wsFindGroupsResults = JsonUtil.asObject(json, WsFindGroupsResults.class);
         FindGroupsResults findGroupsResults = new FindGroupsResults(wsFindGroupsResults);
@@ -76,7 +78,7 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "GroupSaveResultsOOTBBean")
-    public GroupSaveResults grouperGroupSaveResultsOOTB() {
+    public GroupSaveResults grouperGroupSaveResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.group.save.results.description.updated");
         WsGroupSaveResults wsGroupSaveResults = JsonUtil.asObject(json, WsGroupSaveResults.class);
         GroupSaveResults groupSaveResults = new GroupSaveResults(wsGroupSaveResults);
@@ -84,7 +86,7 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "AssignAttributesOOTBBean")
-    public AssignAttributesResults grouperAssignAttributesResultsOOTB() {
+    public AssignAttributesResults grouperAssignAttributesResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.assign.attributes.results.time.changed");
         WsAssignAttributesResults wsAssignAttributesResults = JsonUtil.asObject(json, WsAssignAttributesResults.class);
         AssignAttributesResults assignAttributesResults = new AssignAttributesResults(wsAssignAttributesResults);
@@ -92,7 +94,7 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "GetMembersResultsOOTBBean")
-    public GetMembersResults grouperGetMembersResultsOOTB() {
+    public GetMembersResults grouperGetMembersResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.members.results.success.multiple.groups");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
         GetMembersResults getMembersResults = new GetMembersResults(wsGetMembersResults);
@@ -100,28 +102,28 @@ class OotbGrouperPropertyConfigurer {
     }
 
     @Bean(name = "RemoveMembersResultsOOTBBean")
-    public RemoveMembersResults grouperRemoveMembersResultsOOTB() {
+    public RemoveMembersResults grouperRemoveMembersResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.delete.member.results.success");
         WsDeleteMemberResults wsDeleteMemberResults = JsonUtil.asObject(json, WsDeleteMemberResults.class);
         RemoveMembersResults removeMembersResults = new RemoveMembersResults(wsDeleteMemberResults);
         return removeMembersResults;
     }
     @Bean(name = "AttributeAssignmentResultsOOTBBean")
-    public GroupAttributeResults grouperGroupAttributeResultsOOTB() {
+    public GroupAttributeResults grouperGroupAttributeResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.success");
         WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         GroupAttributeResults groupAttributeResults = new GroupAttributeResults(wsGetAttributeAssignmentsResults);
         return groupAttributeResults;
     }
     @Bean(name = "AssignGrouperPrivilegesResultOOTBBean")
-    public AssignGrouperPrivilegesResult grouperAssignGrouperPrivilegesResultOOTB() {
+    public AssignGrouperPrivilegesResult grouperAssignGrouperPrivilegesResultOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.assign.grouper.privileges.results.success");
         WsAssignGrouperPrivilegesLiteResult wsAssignGrouperPrivilegesLiteResult = JsonUtil.asObject(json, WsAssignGrouperPrivilegesLiteResult.class);
         AssignGrouperPrivilegesResult assignGrouperPrivilegesResult = new AssignGrouperPrivilegesResult(wsAssignGrouperPrivilegesLiteResult);
         return assignGrouperPrivilegesResult;
     }
     @Bean(name = "GetGroupsResultsOOTBBean")
-    public GetGroupsResults grouperGetGroupsResultsOOTB() {
+    public GetGroupsResults grouperGetGroupsResultsOOTB() throws JsonProcessingException {
         String json = propertyLocator.find("ws.get.groups.results.success");
         WsGetGroupsResults wsgetGroupsResults = JsonUtil.asObject(json, WsGetGroupsResults.class);
         GetGroupsResults getGroupsResults = new GetGroupsResults(wsgetGroupsResults);

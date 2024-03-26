@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,7 @@ public class HasMembersResultsTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -48,7 +49,7 @@ public class HasMembersResultsTest {
     }
 
     @Test
-    public void successfulResults() {
+    public void successfulResults() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.uhuuid");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -81,7 +82,7 @@ public class HasMembersResultsTest {
     }
 
     @Test
-    public void notMemberResults() {
+    public void notMemberResults() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.not.members");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -94,7 +95,7 @@ public class HasMembersResultsTest {
     }
 
     @Test
-    public void failedResults() {
+    public void failedResults() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.is.members.failure");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);
@@ -105,7 +106,7 @@ public class HasMembersResultsTest {
     }
 
     @Test
-    public void nullGroup() {
+    public void nullGroup() throws JsonProcessingException {
         String json = propertyLocator.find("ws.has.member.results.null.group");
         WsHasMemberResults wsHasMemberResults = JsonUtil.asObject(json, WsHasMemberResults.class);
         HasMembersResults hasMembersResults = new HasMembersResults(wsHasMemberResults);

@@ -1,6 +1,8 @@
 package edu.hawaii.its.api.util;
 
 import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,13 +25,12 @@ public class JsonUtil {
         return result;
     }
 
-    public static <T> T asObject(final String json, Class<T> type) {
+    public static <T> T asObject(final String json, Class<T> type) throws JsonProcessingException {
+
         T result = null;
-        try {
+
             result = new ObjectMapper().readValue(json, type);
-        } catch (Exception e) {
-            logger.error("Error: " + type +"; " + e);
-        }
+
         return result;
     }
 

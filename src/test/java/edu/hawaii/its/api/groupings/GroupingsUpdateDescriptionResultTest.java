@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public class GroupingsUpdateDescriptionResultTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String updatedDescription = "updatedDescription";
         String json = propertyValue("ws.group.save.results.description.updated");
         WsGroupSaveResults wsGroupSaveResults = JsonUtil.asObject(json, WsGroupSaveResults.class);

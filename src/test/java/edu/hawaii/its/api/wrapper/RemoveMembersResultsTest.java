@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ public class RemoveMembersResultsTest {
     }
 
     @Test
-    public void construction() {
+    public void construction() throws JsonProcessingException {
         String json = propertyValue("ws.delete.member.results.success");
         WsDeleteMemberResults wsDeleteMemberResults = JsonUtil.asObject(json, WsDeleteMemberResults.class);
         RemoveMembersResults removeMembersResults = new RemoveMembersResults(wsDeleteMemberResults);
@@ -41,7 +42,7 @@ public class RemoveMembersResultsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws JsonProcessingException {
         String json = propertyValue("ws.delete.member.results.success");
         WsDeleteMemberResults wsDeleteMemberResults = JsonUtil.asObject(json, WsDeleteMemberResults.class);
         RemoveMembersResults removeMembersResults = new RemoveMembersResults(wsDeleteMemberResults);
