@@ -1,10 +1,7 @@
 package edu.hawaii.its.api.wrapper;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import edu.hawaii.its.api.util.JsonUtil;
-
-import edu.internet2.middleware.grouperClient.ws.beans.WsDeleteMemberResults;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.FileInputStream;
 import java.nio.file.Path;
@@ -14,8 +11,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import edu.hawaii.its.api.util.JsonUtil;
+
+import edu.internet2.middleware.grouperClient.ws.beans.WsDeleteMemberResults;
 
 public class RemoveMembersResultsTest {
 
@@ -51,12 +52,12 @@ public class RemoveMembersResultsTest {
         assertEquals(5, removeMembersResults.getResults().size());
     }
 
-    public List<String> getTestUsernames() {
+    public List<String> getTestUids() {
         String[] array = { "testiwta", "testiwtb", "testiwtc", "testiwtd", "testiwte" };
         return new ArrayList<>(Arrays.asList(array));
     }
 
-    public List<String> getTestNumbers() {
+    public List<String> getTestUhUuids() {
         String[] array = { "99997010", "99997027", "99997033", "99997043", "99997056" };
         return new ArrayList<>(Arrays.asList(array));
     }

@@ -1,14 +1,15 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.hawaii.its.api.type.OptType;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsAttributeAssign;
 import edu.internet2.middleware.grouperClient.ws.beans.WsAttributeDefName;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGroup;
-
-import java.util.ArrayList;
-import java.util.List;
+import edu.internet2.middleware.grouperClientExt.com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class GroupAttributeResults extends Results {
     private final WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults;
@@ -80,4 +81,10 @@ public class GroupAttributeResults extends Results {
         }
         return false;
     }
+
+    @JsonIgnore
+    public WsGetAttributeAssignmentsResults getWsGetAttributeAssignmentsResults() {
+        return wsGetAttributeAssignmentsResults;
+    }
+
 }

@@ -1,11 +1,12 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.internet2.middleware.grouperClient.ws.beans.WsGroup;
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResult;
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
-
-import java.util.ArrayList;
-import java.util.List;
+import edu.internet2.middleware.grouperClientExt.com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class HasMembersResults extends Results {
 
@@ -45,5 +46,10 @@ public class HasMembersResults extends Results {
             return new Group();
         }
         return new Group(wsGroup);
+    }
+
+    @JsonIgnore
+    public WsHasMemberResults getWsHasMemberResults() {
+        return wsHasMemberResults;
     }
 }

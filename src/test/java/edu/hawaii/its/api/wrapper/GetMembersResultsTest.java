@@ -1,32 +1,32 @@
 package edu.hawaii.its.api.wrapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
 import edu.hawaii.its.api.util.JsonUtil;
 import edu.hawaii.its.api.util.PropertyLocator;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @ActiveProfiles("localTest")
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class GetMembersResultsTest {
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uids}")
+    private List<String> TEST_UIDS;
 
-    @Value("${groupings.api.test.uh-numbers}")
-    private List<String> TEST_NUMBERS;
+    @Value("${groupings.api.test.uh-uuids}")
+    private List<String> TEST_UH_UUIDS;
 
     @Value("${groupings.api.test.uh-names}")
     private List<String> TEST_NAMES;
@@ -82,8 +82,8 @@ public class GetMembersResultsTest {
         Subject subject = includeMembers.get(0);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(0), subject.getUid());
-        assertEquals(TEST_NUMBERS.get(0), subject.getUhUuid());
+        assertEquals(TEST_UIDS.get(0), subject.getUid());
+        assertEquals(TEST_UH_UUIDS.get(0), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(0), subject.getName());
         assertEquals(TEST_LASTNAMES.get(0), subject.getLastName());
         assertEquals(TEST_FIRSTNAMES.get(0), subject.getFirstName());
@@ -91,8 +91,8 @@ public class GetMembersResultsTest {
         subject = includeMembers.get(1);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(1), subject.getUid());
-        assertEquals(TEST_NUMBERS.get(1), subject.getUhUuid());
+        assertEquals(TEST_UIDS.get(1), subject.getUid());
+        assertEquals(TEST_UH_UUIDS.get(1), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(1), subject.getName());
         assertEquals(TEST_LASTNAMES.get(1), subject.getLastName());
         assertEquals(TEST_FIRSTNAMES.get(1), subject.getFirstName());
@@ -109,8 +109,8 @@ public class GetMembersResultsTest {
         subject = excludeMembers.get(0);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(2), subject.getUid());
-        assertEquals(TEST_NUMBERS.get(2), subject.getUhUuid());
+        assertEquals(TEST_UIDS.get(2), subject.getUid());
+        assertEquals(TEST_UH_UUIDS.get(2), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(2), subject.getName());
         assertEquals(TEST_LASTNAMES.get(2), subject.getLastName());
         assertEquals(TEST_FIRSTNAMES.get(2), subject.getFirstName());
@@ -118,8 +118,8 @@ public class GetMembersResultsTest {
         subject = excludeMembers.get(1);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(3), subject.getUid());
-        assertEquals(TEST_NUMBERS.get(3), subject.getUhUuid());
+        assertEquals(TEST_UIDS.get(3), subject.getUid());
+        assertEquals(TEST_UH_UUIDS.get(3), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(3), subject.getName());
         assertEquals(TEST_LASTNAMES.get(3), subject.getLastName());
         assertEquals(TEST_FIRSTNAMES.get(3), subject.getFirstName());
@@ -136,8 +136,8 @@ public class GetMembersResultsTest {
         subject = ownersMembers.get(0);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(TEST_USERNAMES.get(4), subject.getUid());
-        assertEquals(TEST_NUMBERS.get(4), subject.getUhUuid());
+        assertEquals(TEST_UIDS.get(4), subject.getUid());
+        assertEquals(TEST_UH_UUIDS.get(4), subject.getUhUuid());
         assertEquals(TEST_NAMES.get(4), subject.getName());
         assertEquals(TEST_LASTNAMES.get(4), subject.getLastName());
         assertEquals(TEST_FIRSTNAMES.get(4), subject.getFirstName());

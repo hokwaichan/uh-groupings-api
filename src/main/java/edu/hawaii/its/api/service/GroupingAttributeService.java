@@ -1,26 +1,22 @@
 package edu.hawaii.its.api.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.hawaii.its.api.exception.AccessDeniedException;
-import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
-import edu.hawaii.its.api.groupings.GroupingUpdatedAttributesResult;
-import edu.hawaii.its.api.type.GroupingsServiceResult;
-import edu.hawaii.its.api.type.GroupingsServiceResultException;
-import edu.hawaii.its.api.type.OptRequest;
-import edu.hawaii.its.api.type.Person;
-import edu.hawaii.its.api.wrapper.AssignAttributesResults;
-import edu.hawaii.its.api.wrapper.AssignGrouperPrivilegesResult;
-import edu.hawaii.its.api.wrapper.GroupAttribute;
-
-import edu.internet2.middleware.grouperClient.ws.beans.ResultMetadataHolder;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import edu.hawaii.its.api.exception.AccessDeniedException;
+import edu.hawaii.its.api.exception.GroupingsServiceResultException;
+import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
+import edu.hawaii.its.api.groupings.GroupingUpdatedAttributesResult;
+import edu.hawaii.its.api.type.GroupingsServiceResult;
+import edu.hawaii.its.api.type.OptRequest;
+import edu.hawaii.its.api.wrapper.AssignAttributesResults;
+import edu.hawaii.its.api.wrapper.AssignGrouperPrivilegesResult;
+import edu.hawaii.its.api.wrapper.GroupAttribute;
 
 @Service
 public class GroupingAttributeService {
@@ -43,46 +39,49 @@ public class GroupingAttributeService {
     @Value("${groupings.api.failure}")
     private String FAILURE;
 
-    public static final Log logger = LogFactory.getLog(GroupingAttributeService.class);
+    private static final Log logger = LogFactory.getLog(GroupingAttributeService.class);
 
-    @Autowired
-    private GrouperApiService grouperApiService;
+    private final GrouperService grouperService;
 
-    @Autowired
-    private GroupingAssignmentService groupingAssignmentService;
+    private final MemberService memberService;
 
-    @Autowired
-    private MemberService memberService;
+    private final GroupingsService groupingsService;
 
-    @Autowired
-    private GroupingsService groupingsService;
+    private final UpdateTimestampService timestampService;
 
-    @Autowired
-    private UpdateTimestampService timestampService;
+    public GroupingAttributeService(GrouperService grouperService,
+            MemberService memberService,
+            GroupingsService groupingsService,
+            UpdateTimestampService timestampService) {
+        this.grouperService = grouperService;
+        this.memberService = memberService;
+        this.groupingsService = groupingsService;
+        this.timestampService = timestampService;
+    }
 
     /**
      * Turn the ability for users to opt-in/opt-out to a grouping on or off.
      */
     public List<GroupingsServiceResult> changeOptStatus(OptRequest optInRequest, OptRequest optOutRequest) {
 
-        checkPrivileges(optInRequest.getGroupNameRoot(), optInRequest.getUsername());
+        checkPrivileges(optInRequest.getGroupNameRoot(), optInRequest.getUid());
 
         List<GroupingsServiceResult> results = new ArrayList<>();
 
         results.add(assignGrouperPrivilege(
-                optInRequest.getUsername(),
+                optInRequest.getUid(),
                 optInRequest.getPrivilegeType().value(),
                 optInRequest.getGroupName(),
                 optInRequest.getOptValue()));
 
         results.add(assignGrouperPrivilege(
-                optOutRequest.getUsername(),
+                optOutRequest.getUid(),
                 optOutRequest.getPrivilegeType().value(),
                 optOutRequest.getGroupName(),
                 optOutRequest.getOptValue()));
 
         results.add(changeGroupAttributeStatus(optInRequest.getGroupNameRoot(),
-                optInRequest.getUsername(),
+                optInRequest.getUid(),
                 optInRequest.getOptId(),
                 optInRequest.getOptValue()));
 
@@ -125,7 +124,7 @@ public class GroupingAttributeService {
 
     // Check if attribute is on.
     public boolean isGroupAttribute(String groupPath, String attributeName) {
-        List<GroupAttribute> groupAttributes = grouperApiService
+        List<GroupAttribute> groupAttributes = grouperService
                 .groupAttributeResults(attributeName, groupPath)
                 .getGroupAttributes();
         return groupAttributes.stream()
@@ -142,7 +141,7 @@ public class GroupingAttributeService {
 
     public GroupingUpdatedAttributesResult updateAttribute(String currentUser, String attributeName, String assignOperation,
             String groupingPath) {
-        AssignAttributesResults assignAttributesResults = grouperApiService.assignAttributesResults(
+        AssignAttributesResults assignAttributesResults = grouperService.assignAttributesResults(
                 currentUser, ASSIGN_TYPE_GROUP, assignOperation, groupingPath, attributeName);
 
         GroupingUpdatedAttributesResult result = new GroupingUpdatedAttributesResult(assignAttributesResults);
@@ -156,18 +155,18 @@ public class GroupingAttributeService {
     public GroupingsServiceResult assignGrouperPrivilege(String currentUser, String privilegeName, String groupName, boolean isSet) {
         String action = "set " + privilegeName + " " + isSet + " for " + EVERY_ENTITY + " in " + groupName;
         AssignGrouperPrivilegesResult assignGrouperPrivilegesResult =
-                grouperApiService.assignGrouperPrivilegesResult(currentUser, groupName, privilegeName, EVERY_ENTITY, isSet);
+                grouperService.assignGrouperPrivilegesResult(currentUser, groupName, privilegeName, EVERY_ENTITY, isSet);
         return makeGroupingsServiceResult(assignGrouperPrivilegesResult.getResultCode(), action);
     }
 
     // Updates a Group's description, then passes the Group object to GrouperFactoryService to be saved in Grouper.
-    public GroupingUpdateDescriptionResult updateDescription(String groupPath, String ownerUsername,
+    public GroupingUpdateDescriptionResult updateDescription(String groupPath, String ownerUid,
             String description) {
-        logger.info(String.format("updateDescription; groupPath: %s; ownerUsername: %s; description: %s;",
-                groupPath, ownerUsername, description));
+        logger.info(String.format("updateDescription; groupPath: %s; ownerUid: %s; description: %s;",
+                groupPath, ownerUid, description));
 
-        if (!memberService.isOwner(groupPath, ownerUsername) && !memberService.isAdmin(
-                ownerUsername)) {
+        if (!memberService.isOwner(groupPath, ownerUid) && !memberService.isAdmin(
+                ownerUid)) {
             throw new AccessDeniedException();
         }
         return groupingsService.updateGroupingDescription(groupPath, description);
@@ -183,35 +182,6 @@ public class GroupingAttributeService {
         if (!memberService.isOwner(groupingPath, ownerIdentifier) && !memberService.isAdmin(ownerIdentifier)) {
             throw new AccessDeniedException();
         }
-    }
-
-    /**
-     * Make a groupingsServiceResult with the result code from the metadataHolder and the action string.
-     */
-    public GroupingsServiceResult makeGroupingsServiceResult(ResultMetadataHolder resultMetadataHolder, String action) {
-        GroupingsServiceResult groupingsServiceResult = new GroupingsServiceResult();
-        groupingsServiceResult.setAction(action);
-        groupingsServiceResult.setResultCode(resultMetadataHolder.getResultMetadata().getResultCode());
-
-        if (groupingsServiceResult.getResultCode().startsWith(FAILURE)) {
-            throw new GroupingsServiceResultException(groupingsServiceResult);
-        }
-
-        return groupingsServiceResult;
-    }
-
-    public GroupingsServiceResult makeGroupingsServiceResult(ResultMetadataHolder resultMetadataHolder, String action,
-            Person person) {
-        GroupingsServiceResult groupingsServiceResult = new GroupingsServiceResult();
-        groupingsServiceResult.setAction(action);
-        groupingsServiceResult.setResultCode(resultMetadataHolder.getResultMetadata().getResultCode());
-        groupingsServiceResult.setPerson(person);
-
-        if (groupingsServiceResult.getResultCode().startsWith(FAILURE)) {
-            throw new GroupingsServiceResultException(groupingsServiceResult);
-        }
-
-        return groupingsServiceResult;
     }
 
     public GroupingsServiceResult makeGroupingsServiceResult(String resultCode, String action) {

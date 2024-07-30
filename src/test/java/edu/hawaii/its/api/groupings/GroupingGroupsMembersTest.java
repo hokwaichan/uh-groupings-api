@@ -1,19 +1,20 @@
 package edu.hawaii.its.api.groupings;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import edu.hawaii.its.api.util.JsonUtil;
 import edu.hawaii.its.api.util.PropertyLocator;
 import edu.hawaii.its.api.wrapper.GetMembersResults;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GroupingGroupsMembersTest {
     private PropertyLocator propertyLocator;
@@ -24,13 +25,27 @@ public class GroupingGroupsMembersTest {
     }
 
     @Test
+    public void constructor() {
+        GroupingGroupsMembers groupingGroupsMembers = new GroupingGroupsMembers();
+        assertEquals("", groupingGroupsMembers.getGroupPath());
+        assertEquals("", groupingGroupsMembers.getResultCode());
+        assertNotNull(groupingGroupsMembers.getAllMembers());
+        assertFalse(groupingGroupsMembers.isBasis());
+        assertFalse(groupingGroupsMembers.isInclude());
+        assertFalse(groupingGroupsMembers.isExclude());
+        assertFalse(groupingGroupsMembers.isOwners());
+        assertEquals(Integer.valueOf(0), groupingGroupsMembers.getPageNumber());
+        assertTrue(groupingGroupsMembers.isPaginationComplete());
+    }
+
+    @Test
     public void successfulResult() {
-        String onlyInclude = "iamtst01";
-        String basisAndInclude = "iamtst02";
-        String onlyExclude = "iamtst03";
-        String basisAndExclude = "iamtst04";
-        String owner = "iamtst05";
-        String onlyBasis = "iamtst06";
+        String onlyInclude = "testiwta";
+        String basisAndInclude = "testiwtb";
+        String onlyExclude = "testiwtc";
+        String basisAndExclude = "testiwtd";
+        String owner = "testiwte";
+        String onlyBasis = "testiwtf";
 
         String json = propertyLocator.find("ws.get.members.results.success.multiple.groups");
         WsGetMembersResults wsGetMembersResults = JsonUtil.asObject(json, WsGetMembersResults.class);
@@ -168,4 +183,5 @@ public class GroupingGroupsMembersTest {
         assertNotNull(groupingGroupsMembers.getAllMembers().getMembers());
         assertTrue(groupingGroupsMembers.getAllMembers().getMembers().isEmpty());
     }
+
 }

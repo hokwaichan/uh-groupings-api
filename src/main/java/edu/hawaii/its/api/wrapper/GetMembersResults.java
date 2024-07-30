@@ -1,10 +1,14 @@
 package edu.hawaii.its.api.wrapper;
 
-import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResult;
-import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResult;
+import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
+import edu.internet2.middleware.grouperClientExt.com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * A wrapper for WsGetMembersResults, which is returned from grouper when GcGetMembers.execute(wrapped by GetMembersCommand)
@@ -13,6 +17,7 @@ import java.util.List;
  */
 public class GetMembersResults extends Results {
 
+    public static final Log log = LogFactory.getLog(GetMembersResults.class);
     private final WsGetMembersResults wsGetMembersResults;
 
     public GetMembersResults(WsGetMembersResults wsGetMembersResults) {
@@ -42,5 +47,10 @@ public class GetMembersResults extends Results {
             getMembersResults.add(new GetMembersResult(wsGetMembersResult));
         }
         return getMembersResults;
+    }
+
+    @JsonIgnore
+    public WsGetMembersResults getWsGetMembersResults() {
+        return this.wsGetMembersResults;
     }
 }

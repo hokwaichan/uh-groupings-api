@@ -1,15 +1,13 @@
 package edu.hawaii.its.api.groupings;
 
-import org.junit.jupiter.api.Test;
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
-import edu.hawaii.its.api.service.GrouperApiService;
+import edu.hawaii.its.api.service.GrouperService;
 import edu.hawaii.its.api.wrapper.AttributesResult;
 import edu.hawaii.its.api.wrapper.FindAttributesResults;
 import edu.hawaii.its.api.wrapper.GroupAttributeResults;
-
 import edu.internet2.middleware.grouperClient.ws.beans.WsFindAttributeDefNamesResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,14 +35,14 @@ public class TestGroupingSyncDestinations {
     private String GROUPING;
 
     @Autowired
-    private GrouperApiService grouperApiService;
+    private GrouperService grouperService;
 
     @Test
     public void constructor() {
-        FindAttributesResults findAttributesResults = grouperApiService.findAttributesResults(
+        FindAttributesResults findAttributesResults = grouperService.findAttributesResults(
                 SYNC_DESTINATIONS_CHECKBOXES,
                 SYNC_DESTINATIONS_LOCATION);
-        GroupAttributeResults groupAttributeResults = grouperApiService.groupAttributeResults(
+        GroupAttributeResults groupAttributeResults = grouperService.groupAttributeResults(
                 findAttributesResults.getResults().stream().map(AttributesResult::getName).collect(Collectors.toList()),
                 GROUPING);
         GroupingSyncDestinations groupingSyncDestinations = new GroupingSyncDestinations(
@@ -57,10 +55,10 @@ public class TestGroupingSyncDestinations {
 
     @Test
     public void success() {
-        FindAttributesResults findAttributesResults = grouperApiService.findAttributesResults(
+        FindAttributesResults findAttributesResults = grouperService.findAttributesResults(
                 SYNC_DESTINATIONS_CHECKBOXES,
                 SYNC_DESTINATIONS_LOCATION);
-        GroupAttributeResults groupAttributeResults = grouperApiService.groupAttributeResults(
+        GroupAttributeResults groupAttributeResults = grouperService.groupAttributeResults(
                 findAttributesResults.getResults().stream().map(AttributesResult::getName).collect(Collectors.toList()),
                 GROUPING);
         GroupingSyncDestinations groupingSyncDestinations = new GroupingSyncDestinations(

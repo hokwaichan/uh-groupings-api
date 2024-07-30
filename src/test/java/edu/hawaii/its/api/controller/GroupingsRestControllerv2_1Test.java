@@ -1,62 +1,5 @@
 package edu.hawaii.its.api.controller;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import edu.hawaii.its.api.configuration.SpringBootWebApplication;
-import edu.hawaii.its.api.service.GroupingAttributeService;
-import edu.hawaii.its.api.groupings.GroupingOptAttributes;
-import edu.hawaii.its.api.groupings.GroupingAddResult;
-import edu.hawaii.its.api.groupings.GroupingAddResults;
-import edu.hawaii.its.api.groupings.GroupingDescription;
-import edu.hawaii.its.api.groupings.GroupingGroupMembers;
-import edu.hawaii.its.api.groupings.GroupingGroupsMembers;
-import edu.hawaii.its.api.groupings.GroupingMoveMembersResult;
-import edu.hawaii.its.api.groupings.GroupingRemoveResult;
-import edu.hawaii.its.api.groupings.GroupingRemoveResults;
-import edu.hawaii.its.api.groupings.GroupingReplaceGroupMembersResult;
-import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
-import edu.hawaii.its.api.service.AsyncJobsManager;
-import edu.hawaii.its.api.service.GroupingAssignmentService;
-import edu.hawaii.its.api.service.GroupingOwnerService;
-import edu.hawaii.its.api.service.MemberAttributeService;
-import edu.hawaii.its.api.service.MemberService;
-import edu.hawaii.its.api.service.MembershipService;
-import edu.hawaii.its.api.service.UpdateMemberService;
-import edu.hawaii.its.api.type.AdminListsHolder;
-import edu.hawaii.its.api.type.Group;
-import edu.hawaii.its.api.type.Grouping;
-import edu.hawaii.its.api.type.GroupingPath;
-import edu.hawaii.its.api.type.GroupingsServiceResult;
-import edu.hawaii.its.api.type.Membership;
-import edu.hawaii.its.api.type.OptRequest;
-import edu.hawaii.its.api.type.OptType;
-import edu.hawaii.its.api.type.Person;
-import edu.hawaii.its.api.type.PrivilegeType;
-import edu.hawaii.its.api.type.SyncDestination;
-import edu.hawaii.its.api.util.JsonUtil;
-import edu.hawaii.its.api.util.PropertyLocator;
-import edu.hawaii.its.api.wrapper.FindGroupsResults;
-import edu.hawaii.its.api.wrapper.GetMembersResults;
-import edu.hawaii.its.api.wrapper.GroupAttributeResults;
-
-import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
-import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
-import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.context.WebApplicationContext;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -70,11 +13,71 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.context.WebApplicationContext;
+
+import edu.hawaii.its.api.configuration.SpringBootWebApplication;
+import edu.hawaii.its.api.groupings.GroupingAddResult;
+import edu.hawaii.its.api.groupings.GroupingAddResults;
+import edu.hawaii.its.api.groupings.GroupingDescription;
+import edu.hawaii.its.api.groupings.GroupingGroupMembers;
+import edu.hawaii.its.api.groupings.GroupingGroupsMembers;
+import edu.hawaii.its.api.groupings.GroupingMoveMembersResult;
+import edu.hawaii.its.api.groupings.GroupingOptAttributes;
+import edu.hawaii.its.api.groupings.GroupingPaths;
+import edu.hawaii.its.api.groupings.GroupingRemoveResult;
+import edu.hawaii.its.api.groupings.GroupingRemoveResults;
+import edu.hawaii.its.api.groupings.GroupingReplaceGroupMembersResult;
+import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
+import edu.hawaii.its.api.groupings.ManageSubjectResults;
+import edu.hawaii.its.api.groupings.MemberAttributeResults;
+import edu.hawaii.its.api.groupings.MembershipResults;
+import edu.hawaii.its.api.service.AsyncJobsManager;
+import edu.hawaii.its.api.service.GroupingAssignmentService;
+import edu.hawaii.its.api.service.GroupingAttributeService;
+import edu.hawaii.its.api.service.GroupingOwnerService;
+import edu.hawaii.its.api.service.MemberAttributeService;
+import edu.hawaii.its.api.service.MemberService;
+import edu.hawaii.its.api.service.MembershipService;
+import edu.hawaii.its.api.service.OotbGroupingPropertiesService;
+import edu.hawaii.its.api.service.UpdateMemberService;
+import edu.hawaii.its.api.type.Group;
+import edu.hawaii.its.api.type.Grouping;
+import edu.hawaii.its.api.type.GroupingPath;
+import edu.hawaii.its.api.type.GroupingsServiceResult;
+import edu.hawaii.its.api.type.OotbActiveProfile;
+import edu.hawaii.its.api.type.OotbActiveProfileResult;
+import edu.hawaii.its.api.type.OptRequest;
+import edu.hawaii.its.api.type.OptType;
+import edu.hawaii.its.api.type.PrivilegeType;
+import edu.hawaii.its.api.util.JsonUtil;
+import edu.hawaii.its.api.util.PropertyLocator;
+import edu.hawaii.its.api.wrapper.FindGroupsResults;
+import edu.hawaii.its.api.wrapper.GetMembersResults;
+import edu.hawaii.its.api.wrapper.GroupAttributeResults;
+import edu.hawaii.its.api.wrapper.Subject;
+
+import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
+import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
+import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
 
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class GroupingsRestControllerv2_1Test {
@@ -114,6 +117,9 @@ public class GroupingsRestControllerv2_1Test {
     @MockBean
     private MemberService memberService;
 
+    @MockBean
+    private OotbGroupingPropertiesService ootbGroupingPropertiesService;
+
     @Autowired
     private WebApplicationContext context;
 
@@ -121,7 +127,7 @@ public class GroupingsRestControllerv2_1Test {
 
     private static final String API_BASE = "/api/groupings/v2.1";
     private static final String GROUPING = "grouping";
-    private static final String USERNAME = "user";
+    private static final String UID = "user";
     private static final String ADMIN = "admin";
     private PropertyLocator propertyLocator;
 
@@ -136,28 +142,35 @@ public class GroupingsRestControllerv2_1Test {
         Grouping grouping = new Grouping("test:ing:me:bob");
 
         Group basisGroup = new Group();
-        basisGroup.addMember(new Person("b0-name", "b0-uuid", "b0-username"));
-        basisGroup.addMember(new Person("b1-name", "b1-uuid", "b1-username"));
-        basisGroup.addMember(new Person("b2-name", "b2-uuid", "b2-username"));
-        grouping.setBasis(basisGroup);
+        Subject subjectBasis0 = new Subject("b0-uid", "b0-name","b0-uuid");
+        basisGroup.addMember(subjectBasis0);
+        Subject subjectBasis1 = new Subject("b1-uid", "b1-name", "b1-uuid");
+        basisGroup.addMember(subjectBasis1);
+        Subject subjectBasis2 = new Subject("b2-uid", "b2-name", "b2-uuid");
+        basisGroup.addMember(subjectBasis2);
 
         Group exclude = new Group();
-        exclude.addMember(new Person("e0-name", "e0-uuid", "e0-username"));
+        Subject subjectExclude0 = new Subject("e0-uid", "e0-name", "e0-uuid");
+        exclude.addMember(subjectExclude0);
         grouping.setExclude(exclude);
 
         Group include = new Group();
-        include.addMember(new Person("i0-name", "i0-uuid", "i0-username"));
-        include.addMember(new Person("i1-name", "i1-uuid", "i1-username"));
+        Subject subjectInclude0 = new Subject("i0-uid", "i0-name", "i0-uuid");
+        include.addMember(subjectInclude0);
+        Subject subjectInclude1 = new Subject("i1-uid", "i1-name", "i1-uuid");
+        include.addMember(subjectInclude1);
         grouping.setInclude(include);
 
         Group owners = new Group();
-        owners.addMember(new Person("o0-name", "o0-uuid", "o0-username"));
-        owners.addMember(new Person("o1-name", "o1-uuid", "o1-username"));
-        owners.addMember(new Person("o2-name", "o2-uuid", "o2-username"));
-        owners.addMember(new Person("o3-name", "o3-uuid", "o3-username"));
+        Subject subjectOwners0 = new Subject("o0-uid", "o0-name", "o0-uuid");
+        owners.addMember(subjectOwners0);
+        Subject subjectOwners1 = new Subject("o1-uid", "o1-name", "o1-uuid");
+        owners.addMember(subjectOwners1);
+        Subject subjectOwners2 = new Subject("o2-uid", "o2-name", "o2-uuid");
+        owners.addMember(subjectOwners2);
+        Subject subjectOwners3 = new Subject("o3-uid", "o3-name", "o3-uuid");
+        owners.addMember(subjectOwners3);
         grouping.setOwners(owners);
-
-        grouping.changeSyncDestinationState(LISTSERV, true);
 
         return grouping;
     }
@@ -167,28 +180,36 @@ public class GroupingsRestControllerv2_1Test {
         Grouping grouping = new Grouping("test:ing:me:kim");
 
         Group basisGroup = new Group();
-        basisGroup.addMember(new Person("b4-name", "b4-uuid", "b4-username"));
-        basisGroup.addMember(new Person("b5-name", "b5-uuid", "b5-username"));
-        basisGroup.addMember(new Person("b6-name", "b6-uuid", "b6-username"));
+        Subject subjectBasis0 = new Subject("b0-uid", "b0-name", "b0-uuid");
+        basisGroup.addMember(subjectBasis0);
+        Subject subjectBasis1 = new Subject("b1-uid", "b1-name", "b1-uuid");
+        basisGroup.addMember(subjectBasis1);
+        Subject subjectBasis2 = new Subject("b2-uid", "b2-name", "b2-uuid");
+        basisGroup.addMember(subjectBasis2);
         grouping.setBasis(basisGroup);
 
         Group exclude = new Group();
-        exclude.addMember(new Person("e4-name", "e4-uuid", "e4-username"));
+        Subject subjectExclude0 = new Subject("e0-uid", "e0-name", "e0-uuid");
+        exclude.addMember(subjectExclude0);
         grouping.setExclude(exclude);
 
         Group include = new Group();
-        include.addMember(new Person("i4-name", "i4-uuid", "i4-username"));
-        include.addMember(new Person("i5-name", "i5-uuid", "i5-username"));
+        Subject subjectInclude0 = new Subject("i0-uid", "i0-name", "i0-uuid");
+        include.addMember(subjectInclude0);
+        Subject subjectInclude1 = new Subject("i1-uid", "i1-name", "i1-uuid");
+        include.addMember(subjectInclude1);
         grouping.setInclude(include);
 
         Group owners = new Group();
-        owners.addMember(new Person("o4-name", "o4-uuid", "o4-username"));
-        owners.addMember(new Person("o5-name", "o5-uuid", "o5-username"));
-        owners.addMember(new Person("o6-name", "o6-uuid", "o6-username"));
-        owners.addMember(new Person("o7-name", "o7-uuid", "o7-username"));
+        Subject subjectOwners0 = new Subject("o0-uid", "o0-name", "o0-uuid");
+        owners.addMember(subjectOwners0);
+        Subject subjectOwners1 = new Subject("o1-uid", "o1-name", "o1-uuid");
+        owners.addMember(subjectOwners1);
+        Subject subjectOwners2 = new Subject("o2-uid", "o2-name", "o2-uuid");
+        owners.addMember(subjectOwners2);
+        Subject subjectOwners3 = new Subject("o3-uid", "o3-name", "o3-uuid");
+        owners.addMember(subjectOwners3);
         grouping.setOwners(owners);
-
-        grouping.changeSyncDestinationState(LISTSERV, true);
 
         return grouping;
     }
@@ -240,50 +261,54 @@ public class GroupingsRestControllerv2_1Test {
     }
 
     @Test
-    public void adminsGroupingsTest() throws Exception {
-        List<GroupingPath> groupingPaths = new ArrayList<>();
-        List<Person> admins = new ArrayList<>();
+    public void groupingPathsTest() throws Exception {
+        List<GroupingPath> paths = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            groupingPaths.add(new GroupingPath("path:to:grouping" + i));
-            admins.add(new Person("admin" + i));
+            paths.add(new GroupingPath("path:to:grouping" + i));
         }
-        Group adminGroup = new Group(admins);
-        AdminListsHolder adminListsHolder = new AdminListsHolder(groupingPaths, adminGroup);
-
-        given(groupingAssignmentService.adminsGroupings("bobo")).willReturn(adminListsHolder);
-        mockMvc.perform(get(API_BASE + "/admins-and-groupings")
+        GroupingPaths groupingPaths = new GroupingPaths();
+        groupingPaths.setGroupingPaths(paths);
+        given(groupingAssignmentService.allGroupingPaths("bobo")).willReturn(groupingPaths);
+        mockMvc.perform(get(API_BASE + "/all-groupings")
                         .header(CURRENT_USER, "bobo"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("allGroupingPaths[0].name").value("grouping0"))
-                .andExpect(jsonPath("allGroupingPaths[1].name").value("grouping1"))
-                .andExpect(jsonPath("allGroupingPaths[2].name").value("grouping2"))
-                .andExpect(jsonPath("allGroupingPaths[0].path").value("path:to:grouping0"))
-                .andExpect(jsonPath("allGroupingPaths[1].path").value("path:to:grouping1"))
-                .andExpect(jsonPath("allGroupingPaths[2].path").value("path:to:grouping2"))
-                .andExpect(jsonPath("adminGroup.members[0].name").value("admin0"))
-                .andExpect(jsonPath("adminGroup.members[1].name").value("admin1"))
-                .andExpect(jsonPath("adminGroup.members[2].name").value("admin2"));
+                .andExpect(jsonPath("groupingPaths[0].name").value("grouping0"))
+                .andExpect(jsonPath("groupingPaths[1].name").value("grouping1"))
+                .andExpect(jsonPath("groupingPaths[2].name").value("grouping2"))
+                .andExpect(jsonPath("groupingPaths[0].path").value("path:to:grouping0"))
+                .andExpect(jsonPath("groupingPaths[1].path").value("path:to:grouping1"))
+                .andExpect(jsonPath("groupingPaths[2].path").value("path:to:grouping2"));
         verify(groupingAssignmentService, times(1))
-                .adminsGroupings("bobo");
+                .allGroupingPaths("bobo");
+    }
+
+    @Test
+    public void groupingAdminsTest() throws Exception {
+        given(groupingAssignmentService.groupingAdmins("bobo")).willReturn(new GroupingGroupMembers());
+        MvcResult mvcResult = mockMvc.perform(get(API_BASE + "/grouping-admins")
+                        .header(CURRENT_USER, "bobo"))
+                .andExpect(status().isOk()).andReturn();
+        assertNotNull(mvcResult);
+        verify(groupingAssignmentService, times(1)).groupingAdmins("bobo");
     }
 
     @Test
     public void addAdminTest() throws Exception {
         String adminToAdd = "adminToAdd";
         GroupingAddResult addMemberResult = new GroupingAddResult();
-        given(updateMemberService.addAdmin(ADMIN, adminToAdd)).willReturn(addMemberResult);
+        given(updateMemberService.addAdminMember(ADMIN, adminToAdd)).willReturn(addMemberResult);
         mockMvc.perform(post(API_BASE + "/admins/" + adminToAdd)
                         .header(CURRENT_USER, ADMIN))
                 .andExpect(status().isOk());
         verify(updateMemberService, times(1))
-                .addAdmin(ADMIN, adminToAdd);
+                .addAdminMember(ADMIN, adminToAdd);
     }
 
     @Test
     public void removeAdminTest() throws Exception {
         String adminToRemove = "adminToRemove";
         GroupingRemoveResult removeMemberResult = new GroupingRemoveResult();
-        given(updateMemberService.removeAdmin(ADMIN, adminToRemove))
+        given(updateMemberService.removeAdminMember(ADMIN, adminToRemove))
                 .willReturn(removeMemberResult);
 
         mockMvc.perform(delete(API_BASE + "/admins/" + adminToRemove)
@@ -291,7 +316,7 @@ public class GroupingsRestControllerv2_1Test {
                 .andExpect(status().isOk());
 
         verify(updateMemberService, times(1))
-                .removeAdmin(ADMIN, adminToRemove);
+                .removeAdminMember(ADMIN, adminToRemove);
     }
 
     @Test
@@ -371,64 +396,12 @@ public class GroupingsRestControllerv2_1Test {
     }
 
     @Test
-    public void invalidUhIdentifiersTest() throws Exception {
-        List<String> uhIdentifiers = new ArrayList<>();
-        uhIdentifiers.add("iamtst01");
-        uhIdentifiers.add("iamtst02");
-        MvcResult validResult = mockMvc.perform(post(API_BASE + "/members/invalid")
-                        .header(CURRENT_USER, USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.asJson(uhIdentifiers)))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertThat(validResult, notNullValue());
-
-        verify(memberAttributeService, times(1))
-                .invalidUhIdentifiers(USERNAME, uhIdentifiers);
-    }
-
-    @Test
-    public void invalidUhIdentifiersAsyncTest() throws Exception {
-        List<String> uhIdentifiers = new ArrayList<>();
-        uhIdentifiers.add("iamtst01");
-        uhIdentifiers.add("iamtst02");
-        CompletableFuture<List<String>> completableFuture = new CompletableFuture<>();
-        given(memberAttributeService.invalidUhIdentifiersAsync(USERNAME, uhIdentifiers))
-                .willReturn(completableFuture);
-        MvcResult validResult = mockMvc.perform(post(API_BASE + "/members/invalid/async")
-                        .header(CURRENT_USER, USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.asJson(uhIdentifiers)))
-                .andExpect(status().isAccepted())
-                .andReturn();
-        assertThat(validResult, notNullValue());
-
-        verify(memberAttributeService, times(1))
-                .invalidUhIdentifiersAsync(USERNAME, uhIdentifiers);
-    }
-
-    @Test
-    public void memberAttributesTest() throws Exception {
-        MvcResult validResult = mockMvc.perform(get(API_BASE + "/members/i0-uuid")
-                        .header(CURRENT_USER, "0o0-username"))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertThat(validResult, notNullValue());
-
-        MvcResult invalidResult = mockMvc.perform(get(API_BASE + "/members/<h1>hello<h1>")
-                        .header(CURRENT_USER, "0o0-username"))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertThat(invalidResult, notNullValue());
-    }
-
-    @Test
-    public void membersAttributesTest() throws Exception {
+    public void memberAttributeResultsTest() throws Exception {
         List<String> members = new ArrayList<>();
-        members.add("iamtst01");
-        members.add("iamtst02");
-        MvcResult validResult = mockMvc.perform(post(API_BASE + "/members/")
-                        .header(CURRENT_USER, USERNAME)
+        members.add("testiwta");
+        members.add("testiwtb");
+        MvcResult validResult = mockMvc.perform(post(API_BASE + "/members")
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(members)))
                 .andExpect(status().isOk())
@@ -436,7 +409,27 @@ public class GroupingsRestControllerv2_1Test {
         assertThat(validResult, notNullValue());
 
         verify(memberAttributeService, times(1))
-                .getMembersAttributes(USERNAME, members);
+                .getMemberAttributeResults(UID, members);
+    }
+
+    @Test
+    public void memberAttributeResultsAsyncTest() throws Exception {
+        List<String> members = new ArrayList<>();
+        members.add("testiwta");
+        members.add("testiwtb");
+        CompletableFuture<MemberAttributeResults> completableFuture = new CompletableFuture<>();
+        given(memberAttributeService.getMemberAttributeResultsAsync(UID, members))
+                .willReturn(completableFuture);
+        MvcResult validResult = mockMvc.perform(post(API_BASE + "/members/async")
+                        .header(CURRENT_USER, UID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonUtil.asJson(members)))
+                .andExpect(status().isAccepted())
+                .andReturn();
+        assertThat(validResult, notNullValue());
+
+        verify(memberAttributeService, times(1))
+                .getMemberAttributeResultsAsync(UID, members);
     }
 
     @Test
@@ -464,62 +457,48 @@ public class GroupingsRestControllerv2_1Test {
     }
 
     @Test
-    public void getGroupingTest() throws Exception {
-        given(groupingAssignmentService.getPaginatedGrouping(GROUPING, USERNAME, 1, 1, "name", true))
-                .willReturn(grouping());
-
-        mockMvc.perform(
-                        get(API_BASE + "/groupings/" + GROUPING + "?page=1&size=1&sortString=name&isAscending=true")
-                                .header(CURRENT_USER, USERNAME))
-                .andExpect(status().isOk()).andReturn();
-
-        verify(groupingAssignmentService, times(1))
-                .getPaginatedGrouping(GROUPING, USERNAME, 1, 1, "name", true);
-    }
-
-    @Test
     public void membershipResultsTest() throws Exception {
-        List<Membership> memberships = new ArrayList<>();
-        given(membershipService.membershipResults(ADMIN, "iamtst01")).willReturn(memberships);
+        MembershipResults memberships = new MembershipResults();
+        given(membershipService.membershipResults(ADMIN, "testiwta")).willReturn(memberships);
 
-        mockMvc.perform(get(API_BASE + "/members/iamtst01/memberships")
+        mockMvc.perform(get(API_BASE + "/members/testiwta/memberships")
                         .header(CURRENT_USER, ADMIN))
                 .andExpect(status().isOk());
 
         verify(membershipService, times(1))
-                .membershipResults(ADMIN, "iamtst01");
+                .membershipResults(ADMIN, "testiwta");
     }
 
     @Test
-    public void managePersonResultsTest() throws Exception {
-        List<Membership> results = new ArrayList<>();
-        given(membershipService.managePersonResults(ADMIN, "iamtst01")).willReturn(results);
+    public void manageSubjectResultsTest() throws Exception {
+        ManageSubjectResults manageSubjectResults = new ManageSubjectResults();
+        given(membershipService.manageSubjectResults(ADMIN, "testiwta")).willReturn(manageSubjectResults);
 
-        mockMvc.perform(get(API_BASE + "/members/iamtst01/groupings")
+        mockMvc.perform(get(API_BASE + "/members/testiwta/groupings")
                         .header(CURRENT_USER, ADMIN))
                 .andExpect(status().isOk());
 
         verify(membershipService, times(1))
-                .managePersonResults(ADMIN, "iamtst01");
+                .manageSubjectResults(ADMIN, "testiwta");
     }
 
     @Test
     public void getOptInGroupingPathsTest() throws Exception {
-        List<GroupingPath> optInGroupingPaths = new ArrayList<>();
-        given(groupingAssignmentService.optInGroupingPaths(ADMIN, "iamtst01")).willReturn(optInGroupingPaths);
-        mockMvc.perform(get(API_BASE + "/groupings/members/iamtst01/opt-in-groups")
+        GroupingPaths optInGroupingPaths = new GroupingPaths();
+        given(groupingAssignmentService.optInGroupingPaths(ADMIN, "testiwta")).willReturn(optInGroupingPaths);
+        mockMvc.perform(get(API_BASE + "/groupings/members/testiwta/opt-in-groups")
                         .header(CURRENT_USER, ADMIN))
                 .andExpect(status().isOk());
 
         verify(groupingAssignmentService, times(1))
-                .optInGroupingPaths(ADMIN, "iamtst01");
+                .optInGroupingPaths(ADMIN, "testiwta");
     }
 
     @Test
     public void optInTest() throws Exception {
         MvcResult includeResult =
-                mockMvc.perform(put(API_BASE + "/groupings/test:ing:me:kim/include-members/o6-username/self")
-                                .header("current_user", "o6-username")
+                mockMvc.perform(put(API_BASE + "/groupings/test:ing:me:kim/include-members/o6-uid/self")
+                                .header("current_user", "o6-uid")
                                 .header("accept", "application/json"))
                         .andExpect(status().isOk())
                         .andReturn();
@@ -529,8 +508,8 @@ public class GroupingsRestControllerv2_1Test {
     @Test
     public void optOutTest() throws Exception {
         MvcResult excludeResult =
-                mockMvc.perform(put(API_BASE + "/groupings/test:ing:me:kim/exclude-members/o6-username/self")
-                                .header("current_user", "o6-username")
+                mockMvc.perform(put(API_BASE + "/groupings/test:ing:me:kim/exclude-members/o6-uid/self")
+                                .header("current_user", "o6-uid")
                                 .header("accept", "application/json"))
                         .andExpect(status().isOk())
                         .andReturn();
@@ -544,16 +523,16 @@ public class GroupingsRestControllerv2_1Test {
         usersToAdd.add("tst04name");
         usersToAdd.add("tst05name");
         usersToAdd.add("tst06name");
-        given(updateMemberService.addIncludeMembers(USERNAME, "grouping", usersToAdd))
+        given(updateMemberService.addIncludeMembers(UID, "grouping", usersToAdd))
                 .willReturn(groupingMoveMembersResult);
-        mockMvc.perform(put(API_BASE + "/groupings/grouping/include-members/")
-                        .header(CURRENT_USER, USERNAME)
+        mockMvc.perform(put(API_BASE + "/groupings/grouping/include-members")
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(usersToAdd)))
                 .andExpect(status().isOk());
 
         verify(updateMemberService, times(1))
-                .addIncludeMembers(USERNAME, "grouping", usersToAdd);
+                .addIncludeMembers(UID, "grouping", usersToAdd);
     }
 
     @Test
@@ -563,16 +542,16 @@ public class GroupingsRestControllerv2_1Test {
         usersToAdd.add("tst05name");
         usersToAdd.add("tst06name");
         CompletableFuture<GroupingMoveMembersResult> completableFuture = new CompletableFuture<>();
-        given(updateMemberService.addIncludeMembersAsync(USERNAME, "grouping", usersToAdd))
+        given(updateMemberService.addIncludeMembersAsync(UID, "grouping", usersToAdd))
                 .willReturn(completableFuture);
         mockMvc.perform(put(API_BASE + "/groupings/grouping/include-members/async")
-                        .header(CURRENT_USER, USERNAME)
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(usersToAdd)))
                 .andExpect(status().isAccepted());
 
         verify(updateMemberService, times(1))
-                .addIncludeMembersAsync(USERNAME, "grouping", usersToAdd);
+                .addIncludeMembersAsync(UID, "grouping", usersToAdd);
     }
 
     @Test
@@ -582,17 +561,17 @@ public class GroupingsRestControllerv2_1Test {
         usersToAdd.add("tst04name");
         usersToAdd.add("tst05name");
         usersToAdd.add("tst06name");
-        given(updateMemberService.addExcludeMembers(USERNAME, "grouping", usersToAdd))
+        given(updateMemberService.addExcludeMembers(UID, "grouping", usersToAdd))
                 .willReturn(groupingMoveMembersResult);
 
-        mockMvc.perform(put(API_BASE + "/groupings/grouping/exclude-members/")
-                        .header(CURRENT_USER, USERNAME)
+        mockMvc.perform(put(API_BASE + "/groupings/grouping/exclude-members")
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(usersToAdd)))
                 .andExpect(status().isOk());
 
         verify(updateMemberService, times(1))
-                .addExcludeMembers(USERNAME, "grouping", usersToAdd);
+                .addExcludeMembers(UID, "grouping", usersToAdd);
     }
 
     @Test
@@ -602,16 +581,16 @@ public class GroupingsRestControllerv2_1Test {
         usersToAdd.add("tst05name");
         usersToAdd.add("tst06name");
         CompletableFuture<GroupingMoveMembersResult> completableFuture = new CompletableFuture<>();
-        given(updateMemberService.addExcludeMembersAsync(USERNAME, "grouping", usersToAdd))
+        given(updateMemberService.addExcludeMembersAsync(UID, "grouping", usersToAdd))
                 .willReturn(completableFuture);
         mockMvc.perform(put(API_BASE + "/groupings/grouping/exclude-members/async")
-                        .header(CURRENT_USER, USERNAME)
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(usersToAdd)))
                 .andExpect(status().isAccepted());
 
         verify(updateMemberService, times(1))
-                .addExcludeMembersAsync(USERNAME, "grouping", usersToAdd);
+                .addExcludeMembersAsync(UID, "grouping", usersToAdd);
     }
 
     @Test
@@ -621,16 +600,16 @@ public class GroupingsRestControllerv2_1Test {
         usersToRemove.add("tst04name");
         usersToRemove.add("tst05name");
         usersToRemove.add("tst06name");
-        given(updateMemberService.removeIncludeMembers(USERNAME, "grouping", usersToRemove))
+        given(updateMemberService.removeIncludeMembers(UID, "grouping", usersToRemove))
                 .willReturn(groupingRemoveResults);
-        mockMvc.perform(delete(API_BASE + "/groupings/grouping/include-members/")
-                        .header(CURRENT_USER, USERNAME)
+        mockMvc.perform(delete(API_BASE + "/groupings/grouping/include-members")
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(usersToRemove)))
                 .andExpect(status().isOk());
 
         verify(updateMemberService, times(1))
-                .removeIncludeMembers(USERNAME, "grouping", usersToRemove);
+                .removeIncludeMembers(UID, "grouping", usersToRemove);
     }
 
     @Test
@@ -640,16 +619,16 @@ public class GroupingsRestControllerv2_1Test {
         usersToRemove.add("tst04name");
         usersToRemove.add("tst05name");
         usersToRemove.add("tst06name");
-        given(updateMemberService.removeExcludeMembers(USERNAME, "grouping", usersToRemove))
+        given(updateMemberService.removeExcludeMembers(UID, "grouping", usersToRemove))
                 .willReturn(groupingRemoveResults);
-        mockMvc.perform(delete(API_BASE + "/groupings/grouping/exclude-members/")
-                        .header(CURRENT_USER, USERNAME)
+        mockMvc.perform(delete(API_BASE + "/groupings/grouping/exclude-members")
+                        .header(CURRENT_USER, UID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.asJson(usersToRemove)))
                 .andExpect(status().isOk());
 
         verify(updateMemberService, times(1))
-                .removeExcludeMembers(USERNAME, "grouping", usersToRemove);
+                .removeExcludeMembers(UID, "grouping", usersToRemove);
     }
 
     @Test
@@ -658,16 +637,19 @@ public class GroupingsRestControllerv2_1Test {
         final String admin = "bobo";
 
         String path = "path:to:grouping";
+        String description = "description";
 
-        List<GroupingPath> groupingPathList = new ArrayList<>();
-        groupingPathList.add(new GroupingPath(path));
+        GroupingPaths groupingPaths = new GroupingPaths();
+        groupingPaths.addGroupingPath(new GroupingPath(path, description));
 
         given(memberAttributeService.getOwnedGroupings(admin, uid))
-                .willReturn(groupingPathList);
+                .willReturn(groupingPaths);
         mockMvc.perform(get(API_BASE + "/owners/grouping/groupings")
                         .header(CURRENT_USER, admin)).andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].path").value(path))
-                .andExpect(jsonPath("$[0].name").value("grouping"));
+                .andExpect(jsonPath("$.resultCode").value("SUCCESS"))
+                .andExpect(jsonPath("$.groupingPaths[0].path").value(path))
+                .andExpect(jsonPath("$.groupingPaths[0].name").value("grouping"))
+                .andExpect(jsonPath("$.groupingPaths[0].description").value("description"));
 
         verify(memberAttributeService, times(1))
                 .getOwnedGroupings(admin, uid);
@@ -681,17 +663,17 @@ public class GroupingsRestControllerv2_1Test {
         ownersToAdd.add("tst05name");
         ownersToAdd.add("tst06name");
 
-        given(updateMemberService.addOwnerships(USERNAME, "grouping", ownersToAdd))
+        given(updateMemberService.addOwnerships(UID, "grouping", ownersToAdd))
                 .willReturn(groupingAddResults);
 
         MvcResult result = mockMvc.perform(put(API_BASE + "/groupings/grouping/owners/" + String.join(",", ownersToAdd))
-                        .header(CURRENT_USER, USERNAME))
+                        .header(CURRENT_USER, UID))
                 .andExpect(status().isOk())
                 .andReturn();
 
         assertThat(result, notNullValue());
         verify(updateMemberService, times(1))
-                .addOwnerships(USERNAME, "grouping", ownersToAdd);
+                .addOwnerships(UID, "grouping", ownersToAdd);
 
     }
 
@@ -703,34 +685,34 @@ public class GroupingsRestControllerv2_1Test {
         ownersToRemove.add("tst05name");
         ownersToRemove.add("tst06name");
 
-        given(updateMemberService.removeOwnerships(USERNAME, "grouping", ownersToRemove))
+        given(updateMemberService.removeOwnerships(UID, "grouping", ownersToRemove))
                 .willReturn(groupingRemoveResults);
 
         MvcResult result =
                 mockMvc.perform(delete(API_BASE + "/groupings/grouping/owners/" + String.join(",", ownersToRemove))
-                                .header(CURRENT_USER, USERNAME))
+                                .header(CURRENT_USER, UID))
                         .andExpect(status().isOk())
                         .andReturn();
         assertNotNull(result);
         verify(updateMemberService, times(1))
-                .removeOwnerships(USERNAME, "grouping", ownersToRemove);
+                .removeOwnerships(UID, "grouping", ownersToRemove);
     }
 
     @Test
     public void updateDescriptionTest() throws Exception {
         GroupingUpdateDescriptionResult groupingsUpdateDescriptionResult = new GroupingUpdateDescriptionResult();
 
-        given(groupingAttributeService.updateDescription("grouping", USERNAME, "description")).willReturn(
+        given(groupingAttributeService.updateDescription("grouping", UID, "description")).willReturn(
                 groupingsUpdateDescriptionResult);
         MvcResult result = mockMvc.perform(put(API_BASE + "/groupings/grouping/description")
-                        .header(CURRENT_USER, USERNAME)
+                        .header(CURRENT_USER, UID)
                         .content("description"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertNotNull(result);
 
         verify(groupingAttributeService, times(1))
-                .updateDescription("grouping", USERNAME, "description");
+                .updateDescription("grouping", UID, "description");
     }
 
     @Test
@@ -738,7 +720,7 @@ public class GroupingsRestControllerv2_1Test {
 
         OptRequest optInRequest = new OptRequest.Builder()
                 .withOptType(OptType.IN)
-                .withUsername(USERNAME)
+                .withUid(UID)
                 .withGroupNameRoot("grouping")
                 .withPrivilegeType(PrivilegeType.IN)
                 .withOptValue(true)
@@ -746,7 +728,7 @@ public class GroupingsRestControllerv2_1Test {
 
         OptRequest optOutRequest = new OptRequest.Builder()
                 .withOptType(OptType.IN)
-                .withUsername(USERNAME)
+                .withUid(UID)
                 .withGroupNameRoot("grouping")
                 .withPrivilegeType(PrivilegeType.OUT)
                 .withOptValue(true)
@@ -754,7 +736,7 @@ public class GroupingsRestControllerv2_1Test {
 
         given(groupingAttributeService.changeOptStatus(optInRequest, optOutRequest)).willReturn(gsrListIn());
         mockMvc.perform(put(API_BASE + "/groupings/grouping/preference/" + OptType.IN.value() + "/enable")
-                        .header(CURRENT_USER, USERNAME))
+                        .header(CURRENT_USER, UID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].resultCode").value(SUCCESS))
@@ -763,7 +745,7 @@ public class GroupingsRestControllerv2_1Test {
 
         optInRequest = new OptRequest.Builder()
                 .withOptType(OptType.OUT)
-                .withUsername(USERNAME)
+                .withUid(UID)
                 .withGroupNameRoot("grouping")
                 .withPrivilegeType(PrivilegeType.IN)
                 .withOptValue(false)
@@ -771,7 +753,7 @@ public class GroupingsRestControllerv2_1Test {
 
         optOutRequest = new OptRequest.Builder()
                 .withOptType(OptType.OUT)
-                .withUsername(USERNAME)
+                .withUid(UID)
                 .withGroupNameRoot("grouping")
                 .withPrivilegeType(PrivilegeType.OUT)
                 .withOptValue(false)
@@ -779,34 +761,34 @@ public class GroupingsRestControllerv2_1Test {
 
         given(groupingAttributeService.changeOptStatus(optInRequest, optOutRequest)).willReturn(gsrListOut());
         mockMvc.perform(put(API_BASE + "/groupings/grouping/preference/" + OptType.OUT.value() + "/disable")
-                        .header(CURRENT_USER, USERNAME))
+                        .header(CURRENT_USER, UID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].resultCode").value(SUCCESS))
                 .andExpect(jsonPath("$[0].action").value("member is opted-out"));
         verify(groupingAttributeService, times(1)).changeOptStatus(optInRequest, optOutRequest);
 
-        given(groupingAttributeService.changeGroupAttributeStatus("grouping", USERNAME, LISTSERV, true))
+        given(groupingAttributeService.changeGroupAttributeStatus("grouping", UID, LISTSERV, true))
                 .willReturn(gsrListserv());
         mockMvc.perform(put(API_BASE + "/groupings/grouping/sync-destination/" + LISTSERV + "/enable")
-                        .header(CURRENT_USER, USERNAME))
+                        .header(CURRENT_USER, UID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value(SUCCESS))
                 .andExpect(jsonPath("$.action").value("listserv status changed"));
 
         verify(groupingAttributeService, times(1))
-                .changeGroupAttributeStatus("grouping", USERNAME, LISTSERV, true);
+                .changeGroupAttributeStatus("grouping", UID, LISTSERV, true);
 
-        given(groupingAttributeService.changeGroupAttributeStatus("grouping", USERNAME, RELEASED_GROUPING, true))
+        given(groupingAttributeService.changeGroupAttributeStatus("grouping", UID, RELEASED_GROUPING, true))
                 .willReturn(gsrReleasedGrouping());
         mockMvc.perform(put(API_BASE + "/groupings/grouping/sync-destination/" + RELEASED_GROUPING + "/enable")
-                        .header(CURRENT_USER, USERNAME))
+                        .header(CURRENT_USER, UID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value(SUCCESS))
                 .andExpect(jsonPath("$.action").value("ldap status changed"));
 
         verify(groupingAttributeService, times(1))
-                .changeGroupAttributeStatus("grouping", USERNAME, RELEASED_GROUPING, true);
+                .changeGroupAttributeStatus("grouping", UID, RELEASED_GROUPING, true);
     }
 
     @Test
@@ -942,29 +924,56 @@ public class GroupingsRestControllerv2_1Test {
     }
 
     @Test
+    public void updateActiveDefaultUserTest() throws Exception {
+        List<String> paths =
+                Arrays.asList("ROLE_ADMIN", "ROLE_UH", "ROLE_OWNER", "ROLE_OOTB");
+        OotbActiveProfile activeProfile = new OotbActiveProfile.Builder()
+            .uid("admin0123")
+            .uhUuid("33333333")
+            .name("ADMIN")
+            .givenName("AdminUser")
+            .authorities(paths)
+            .build();
+
+        given(ootbGroupingPropertiesService.updateActiveUserProfile(paths, "admin0123", "33333333", "ADMIN", "AdminUser"))
+                .willReturn(new OotbActiveProfileResult(activeProfile));
+
+        MvcResult result = mockMvc.perform(
+                        post(API_BASE + "/activeProfile/ootb?uid=admin0123&uhUuid=33333333&name=ADMIN&givenName=AdminUser")
+                                .header(CURRENT_USER, CURRENT_USER)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(JsonUtil.asJson(paths)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertNotNull(result);
+        verify(ootbGroupingPropertiesService, times(1))
+                .updateActiveUserProfile(paths, "admin0123", "33333333", "ADMIN", "AdminUser");
+    }
+
+    @Test
     public void regexTest() throws Exception {
-        // Sending an 'unsafe character' in the URI should get rejected and return CLIENT_ERROR
-        MvcResult result1 = mockMvc.perform(get(API_BASE + "/owners/" + USERNAME + "[" + "/groupings")
-                        .header(CURRENT_USER, USERNAME))
-                .andExpect(status().is4xxClientError())
+        // Sending an 'unsafe character' in the URI should get rejected and return SERVER_ERROR
+        MvcResult result1 = mockMvc.perform(get(API_BASE + "/owners/" + UID + "[" + "/groupings")
+                        .header(CURRENT_USER, UID))
+                .andExpect(status().is5xxServerError())
                 .andReturn();
         assertThat(result1, notNullValue());
 
-        MvcResult result2 = mockMvc.perform(get(API_BASE + "/owners/" + USERNAME + "^" + "/groupings")
-                        .header(CURRENT_USER, USERNAME))
-                .andExpect(status().is4xxClientError())
+        MvcResult result2 = mockMvc.perform(get(API_BASE + "/owners/" + UID + "^" + "/groupings")
+                        .header(CURRENT_USER, UID))
+                .andExpect(status().is5xxServerError())
                 .andReturn();
         assertThat(result2, notNullValue());
 
-        MvcResult result3 = mockMvc.perform(get(API_BASE + "/members/" + USERNAME + "}")
-                        .header(CURRENT_USER, USERNAME))
-                .andExpect(status().is4xxClientError())
+        MvcResult result3 = mockMvc.perform(get(API_BASE + "/members/" + UID + "}")
+                        .header(CURRENT_USER, UID))
+                .andExpect(status().is5xxServerError())
                 .andReturn();
         assertThat(result3, notNullValue());
 
-        MvcResult result4 = mockMvc.perform(get(API_BASE + "/members/" + USERNAME + "@")
-                        .header(CURRENT_USER, USERNAME))
-                .andExpect(status().is4xxClientError())
+        MvcResult result4 = mockMvc.perform(get(API_BASE + "/members/" + UID + "@")
+                        .header(CURRENT_USER, UID))
+                .andExpect(status().is5xxServerError())
                 .andReturn();
         assertThat(result4, notNullValue());
     }

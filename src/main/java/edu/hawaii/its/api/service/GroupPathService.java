@@ -1,15 +1,13 @@
 package edu.hawaii.its.api.service;
 
-import edu.hawaii.its.api.exception.InvalidGroupPathException;
-import edu.hawaii.its.api.wrapper.Group;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import edu.hawaii.its.api.exception.InvalidGroupPathException;
+import edu.hawaii.its.api.wrapper.Group;
 
 /**
  * GroupPathService provides a set functions for checking the validity of UH grouping/group paths.
@@ -17,8 +15,11 @@ import java.util.stream.Collectors;
 @Service
 public class GroupPathService {
 
-    @Autowired
-    GrouperApiService grouperApiService;
+    private final GrouperService grouperService;
+
+    public GroupPathService(GrouperService grouperService) {
+            this.grouperService = grouperService;
+    }
 
     /**
      * Throw an exception if path is invalid.
@@ -30,7 +31,7 @@ public class GroupPathService {
     }
 
     public boolean isValidPath(String path) {
-        Group group = grouperApiService.findGroupsResults(path).getGroup();
+        Group group = grouperService.findGroupsResults(path).getGroup();
         return group.isValidPath();
     }
 
@@ -73,7 +74,7 @@ public class GroupPathService {
     }
 
     public List<Group> getValidGroupings(List<String> groupingPaths) {
-        return grouperApiService.findGroupsResults(groupingPaths).getGroups();
+        return grouperService.findGroupsResults(groupingPaths).getGroups();
     }
 
     public String getIncludeGroup(String path) {
@@ -109,7 +110,7 @@ public class GroupPathService {
     }
 
     private Group getGroup(String groupPath) {
-        return grouperApiService.findGroupsResults(groupPath).getGroup();
+        return grouperService.findGroupsResults(groupPath).getGroup();
     }
 
     private String replaceGroup(String rep, Group group) {

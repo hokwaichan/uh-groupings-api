@@ -1,10 +1,10 @@
 package edu.hawaii.its.api.wrapper;
 
-import edu.internet2.middleware.grouperClient.ws.beans.WsAttributeDefName;
-import edu.internet2.middleware.grouperClient.ws.beans.WsFindAttributeDefNamesResults;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.internet2.middleware.grouperClient.ws.beans.WsAttributeDefName;
+import edu.internet2.middleware.grouperClient.ws.beans.WsFindAttributeDefNamesResults;
 
 public class FindAttributesResults extends Results {
     private final WsFindAttributeDefNamesResults wsFindAttributeDefNamesResults;
@@ -22,6 +22,14 @@ public class FindAttributesResults extends Results {
             return "FAILURE";
         }
         return this.wsFindAttributeDefNamesResults.getResultMetadata().getResultCode();
+    }
+
+    public AttributesResult getResult() {
+        WsAttributeDefName[] wsAttributeDefNames = this.wsFindAttributeDefNamesResults.getAttributeDefNameResults();
+        if (isEmpty(wsAttributeDefNames)) {
+            return new AttributesResult();
+        }
+        return new AttributesResult(wsAttributeDefNames[0]);
     }
 
     public List<AttributesResult> getResults() {

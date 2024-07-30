@@ -1,12 +1,12 @@
 package edu.hawaii.its.api.groupings;
 
-import edu.hawaii.its.api.type.GroupType;
-import edu.hawaii.its.api.wrapper.GetMembersResult;
-import edu.hawaii.its.api.wrapper.GetMembersResults;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import edu.hawaii.its.api.type.GroupType;
+import edu.hawaii.its.api.wrapper.GetMembersResult;
+import edu.hawaii.its.api.wrapper.GetMembersResults;
 
 /**
  * When getMembers is called, GroupingGroupsMembers holds the information about UH affiliates that are listed in a grouping.
@@ -189,5 +189,9 @@ public class GroupingGroupsMembers implements GroupingResult {
             }
         }
         return new GroupingGroupMembers();
+    }
+
+    public void setPaginationCompleteTrue() {
+        this.paginationComplete = true;
     }
 }

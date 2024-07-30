@@ -1,159 +1,82 @@
 package edu.hawaii.its.api.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import edu.hawaii.its.api.exception.AccessDeniedException;
-import edu.hawaii.its.api.groupings.GroupingGroupMember;
-import edu.hawaii.its.api.groupings.GroupingGroupMembers;
-import edu.hawaii.its.api.type.AdminListsHolder;
-import edu.hawaii.its.api.type.Group;
-import edu.hawaii.its.api.type.GroupType;
-import edu.hawaii.its.api.type.Grouping;
-import edu.hawaii.its.api.type.GroupingPath;
-import edu.hawaii.its.api.type.Person;
-import edu.hawaii.its.api.wrapper.GetMembersResult;
-import edu.hawaii.its.api.wrapper.GetMembersResults;
-import edu.hawaii.its.api.wrapper.GroupAttributeResults;
-import edu.hawaii.its.api.wrapper.Subject;
-
-import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResult;
-import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
-import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import static edu.hawaii.its.api.service.PathFilter.parentGroupingPath;
+import static edu.hawaii.its.api.service.PathFilter.pathHasInclude;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static edu.hawaii.its.api.service.PathFilter.parentGroupingPath;
-import static edu.hawaii.its.api.service.PathFilter.pathHasInclude;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import edu.hawaii.its.api.exception.AccessDeniedException;
+import edu.hawaii.its.api.groupings.GroupingGroupMember;
+import edu.hawaii.its.api.groupings.GroupingGroupMembers;
+import edu.hawaii.its.api.groupings.GroupingPaths;
+import edu.hawaii.its.api.type.Group;
+import edu.hawaii.its.api.type.GroupType;
+import edu.hawaii.its.api.wrapper.GetMembersResult;
+import edu.hawaii.its.api.wrapper.GetMembersResults;
+import edu.hawaii.its.api.wrapper.Subject;
 
 @Service("groupingAssignmentService")
 public class GroupingAssignmentService {
 
+    private static final Log logger = LogFactory.getLog(GroupingAssignmentService.class);
     @Value("${groupings.api.grouping_admins}")
     private String GROUPING_ADMINS;
-
-    @Value("${groupings.api.person_attributes.uhuuid}")
-    private String UHUUID;
-
     @Value("${groupings.api.stale_subject_id}")
     private String STALE_SUBJECT_ID;
 
-    public static final Log logger = LogFactory.getLog(GroupingAssignmentService.class);
+    private final MemberService memberService;
 
-    @Autowired
-    private GrouperApiService grouperApiService;
+    private final GrouperService grouperService;
 
-    @Autowired
-    private MemberService memberService;
+    private final GroupingsService groupingsService;
 
-    @Autowired
-    private GroupingsService groupingsService;
-
-    /**
-     * Fetch a grouping from Grouper or the database.
-     */
-    public Grouping getGrouping(String groupingPath, String ownerUsername) {
-        logger.info(String.format("getGrouping; groupingPath: %s; ownerUsername: %s;", groupingPath, ownerUsername));
-
-        Grouping compositeGrouping;
-
-        if (!memberService.isOwner(groupingPath, ownerUsername) && !memberService.isAdmin(ownerUsername)) {
-            throw new AccessDeniedException();
-        }
-        compositeGrouping = new Grouping(groupingPath);
-
-        String basis = groupingPath + GroupType.BASIS.value();
-        String include = groupingPath + GroupType.INCLUDE.value();
-        String exclude = groupingPath + GroupType.EXCLUDE.value();
-        String owners = groupingPath + GroupType.OWNERS.value();
-
-        String[] paths = { include,
-                exclude,
-                basis,
-                groupingPath,
-                owners };
-        Map<String, Group> groups = getMembers(ownerUsername, Arrays.asList(paths));
-
-        compositeGrouping = setGroupingAttributes(compositeGrouping);
-
-        compositeGrouping.setDescription(groupingsService.getGroupingDescription(groupingPath));
-        compositeGrouping.setBasis(groups.get(basis));
-        compositeGrouping.setExclude(groups.get(exclude));
-        compositeGrouping.setInclude(groups.get(include));
-        compositeGrouping.setComposite(groups.get(groupingPath));
-        compositeGrouping.setOwners(groups.get(owners));
-
-        return compositeGrouping;
+    public GroupingAssignmentService(MemberService memberService,
+            GrouperService grouperService,
+            GroupingsService groupingsService) {
+        this.memberService = memberService;
+        this.grouperService = grouperService;
+        this.groupingsService = groupingsService;
     }
 
     /**
-     * Fetch a grouping from Grouper Database, but paginated based on given page + size sortString sorts the database
-     * by whichever sortString category is given (e.g. "uid" will sort list by uid) before returning page
-     * isAscending puts the database in ascending or descending order before returning page.
+     * A list of grouping paths for all groupings, restricted to admins' use only.
      */
-    public Grouping getPaginatedGrouping(String groupingPath, String ownerUsername, Integer page, Integer size,
-            String sortString, Boolean isAscending) {
-        logger.info(String.format(
-                "getPaginatedGrouping; grouping: %s; username: %s; page: %s; size: %s; sortString: %s; isAscending: %s;",
-                groupingPath, ownerUsername, page, size, sortString, isAscending));
-        if (!memberService.isOwner(groupingPath, ownerUsername) && !memberService.isAdmin(ownerUsername)) {
+    public GroupingPaths allGroupingPaths(String adminUhIdentifier) {
+        logger.info(String.format("allGroupings; adminUhIdentifier: %s;", adminUhIdentifier));
+        if (!memberService.isAdmin(adminUhIdentifier)) {
             throw new AccessDeniedException();
         }
-        Grouping compositeGrouping = new Grouping(groupingPath);
-        String basis = groupingPath + GroupType.BASIS.value();
-        String include = groupingPath + GroupType.INCLUDE.value();
-        String exclude = groupingPath + GroupType.EXCLUDE.value();
-        String owners = groupingPath + GroupType.OWNERS.value();
-
-        List<String> paths = new ArrayList<>();
-        paths.add(include);
-        paths.add(exclude);
-        paths.add(basis);
-        paths.add(groupingPath);
-        paths.add(owners);
-        Map<String, Group> groups = getPaginatedMembers(ownerUsername, paths, page, size, sortString, isAscending);
-        compositeGrouping = setGroupingAttributes(compositeGrouping);
-
-        compositeGrouping.setDescription(groupingsService.getGroupingDescription(groupingPath));
-        compositeGrouping.setBasis(groups.get(basis));
-        compositeGrouping.setExclude(groups.get(exclude));
-        compositeGrouping.setInclude(groups.get(include));
-        compositeGrouping.setComposite(groups.get(groupingPath));
-        compositeGrouping.setOwners(groups.get(owners));
-        compositeGrouping.setIsEmpty();
-
-        return compositeGrouping;
+        return new GroupingPaths(groupingsService.allGroupAttributeResults());
     }
 
-    //returns an adminLists object containing the list of all admins and all groupings
-    public AdminListsHolder adminsGroupings(String adminUsername) {
-        logger.info(String.format("adminsGroupings; adminUsername: %s;", adminUsername));
-        if (!memberService.isAdmin(adminUsername)) {
+    /**
+     * Returns groupingsAdmins object containing the list of all admins.
+     */
+    public GroupingGroupMembers groupingAdmins(String adminUhIdentifier) {
+        logger.info(String.format("groupingAdmins; adminUhIdentifier: %s;", adminUhIdentifier));
+        if (!memberService.isAdmin(adminUhIdentifier)) {
             throw new AccessDeniedException();
         }
-        AdminListsHolder adminListsHolder = new AdminListsHolder();
-
-        List<String> adminGrouping = Arrays.asList(GROUPING_ADMINS);
-        Group admin = getMembers(adminUsername, adminGrouping).get(GROUPING_ADMINS);
-        adminListsHolder.setAllGroupingPaths(groupingsService.allGroupingPaths());
-        adminListsHolder.setAdminGroup(admin);
-        return adminListsHolder;
+        return new GroupingGroupMembers(grouperService.getMembersResult(adminUhIdentifier, GROUPING_ADMINS));
     }
 
-    //returns a group from grouper or the database
-    public Map<String, Group> getMembers(String ownerUsername, List<String> groupPaths) {
+    /**
+     * Returns a group from grouper or the database.
+     */
+    public Map<String, Group> getMembers(String ownerUid, List<String> groupPaths) {
         GetMembersResults getMembersResults =
-                grouperApiService.getMembersResults(
-                        ownerUsername,
+                grouperService.getMembersResults(
+                        ownerUid,
                         groupPaths,
                         null,
                         null,
@@ -162,30 +85,8 @@ public class GroupingAssignmentService {
         return makeGroups(getMembersResults);
     }
 
-    public Map<String, Group> getPaginatedMembers(String ownerUsername, List<String> groupPaths, Integer page,
-            Integer size,
-            String sortString, Boolean isAscending) {
-        GetMembersResults getMembersResults = grouperApiService.getMembersResults(
-                ownerUsername,
-                groupPaths,
-                page,
-                size,
-                sortString,
-                isAscending);
-        return makeGroups(getMembersResults);
-    }
-
-    // Sets the attributes of a grouping in grouper or the database to match the attributes of the supplied grouping.
-    public Grouping setGroupingAttributes(Grouping grouping) {
-        GroupAttributeResults groupAttributeResults = grouperApiService.groupAttributeResult(grouping.getPath());
-        grouping.setOptInOn(groupAttributeResults.isOptInOn());
-        grouping.setOptOutOn(groupAttributeResults.isOptOutOn());
-
-        return grouping;
-    }
-
     /**
-     * As a group owner, get a list of grouping paths pertaining to the groups which optInUid can opt into.
+     * As a group owner, get a list of grouping paths pertaining to the groups which optInUid can opt out of.
      */
     public List<String> optOutGroupingsPaths(String owner, String optOutUid) {
         logger.info(String.format("optOutGroupingsPaths; owner: %s; optOutUid: %s;", owner, optOutUid));
@@ -200,7 +101,7 @@ public class GroupingAssignmentService {
     /**
      * As a group owner, get a list of grouping paths pertaining to the groups which optInUid can opt into.
      */
-    public List<GroupingPath> optInGroupingPaths(String owner, String optInUid) {
+    public GroupingPaths optInGroupingPaths(String owner, String optInUid) {
         logger.info(String.format("optInGroupingsPaths; owner: %s; optInUid: %s;", owner, optInUid));
 
         List<String> includes = groupingsService.groupPaths(optInUid, pathHasInclude());
@@ -210,13 +111,13 @@ public class GroupingAssignmentService {
         optInPaths.removeAll(includes);
         optInPaths = new ArrayList<>(new HashSet<>(optInPaths));
 
-        return groupingsService.getGroupingPaths(optInPaths);
+        return new GroupingPaths(groupingsService.getGroupingPaths(optInPaths));
     }
 
     public GroupingGroupMembers groupingOwners(String currentUser, String groupingPath) {
         logger.info(String.format("groupingOwners; currentUser: %s; groupingPath: %s;", currentUser, groupingPath));
         return new GroupingGroupMembers(
-                grouperApiService.getMembersResult(currentUser, groupingPath + GroupType.OWNERS.value()));
+                grouperService.getMembersResult(currentUser, groupingPath + GroupType.OWNERS.value()));
     }
 
     public Boolean isSoleOwner(String currentUser, String groupPath, String uidToCheck) {
@@ -239,70 +140,15 @@ public class GroupingAssignmentService {
                 if (!subject.hasUHAttributes()) {
                     continue;
                 }
-                Person person = new Person(subject);
                 if (group.getPath().endsWith(GroupType.BASIS.value()) && subject.getSourceId() != null
                         && subject.getSourceId()
                         .equals(STALE_SUBJECT_ID)) {
-                    person.setUsername("User Not Available.");
+                    subject.setUid("User Not Available.");
                 }
-                group.addMember(new Person(subject));
+                group.addMember(subject);
             }
             groupMembers.put(group.getPath(), group);
         }
         return groupMembers;
-    }
-
-    /**
-     * Makes a group filled with members from membersResults.
-     */
-    public Map<String, Group> makeGroups(WsGetMembersResults membersResults) {
-        Map<String, Group> groups = new HashMap<>();
-        if (membersResults.getResults().length > 0) {
-            String[] attributeNames = membersResults.getSubjectAttributeNames();
-
-            for (WsGetMembersResult result : membersResults.getResults()) {
-                WsSubject[] subjects = result.getWsSubjects();
-                Group group = new Group(result.getWsGroup().getName());
-
-                if (subjects == null || subjects.length == 0) {
-                    continue;
-                }
-                for (WsSubject subject : subjects) {
-                    if (subject == null) {
-                        continue;
-                    }
-                    Person personToAdd = makePerson(subject, attributeNames);
-                    if (group.getPath().endsWith(GroupType.BASIS.value()) && subject.getSourceId() != null
-                            && subject.getSourceId().equals(STALE_SUBJECT_ID)) {
-                        personToAdd.setUsername("User Not Available.");
-                    }
-                    group.addMember(personToAdd);
-                }
-                groups.put(group.getPath(), group);
-            }
-        }
-        // Return empty group if for any unforeseen results.
-        return groups;
-    }
-
-    /**
-     * Helper - makeGroups
-     * Makes a person with all attributes in attributeNames.
-     */
-    public Person makePerson(WsSubject subject, String[] attributeNames) {
-        if (subject == null || subject.getAttributeValues() == null) {
-            return new Person();
-        }
-
-        Person person = new Person();
-        for (int i = 0; i < subject.getAttributeValues().length; i++) {
-            person.addAttribute(attributeNames[i], subject.getAttributeValue(i));
-        }
-
-        // uhUuid is the only attribute not actually
-        // in the WsSubject attribute array.
-        person.addAttribute(UHUUID, subject.getId());
-
-        return person;
     }
 }

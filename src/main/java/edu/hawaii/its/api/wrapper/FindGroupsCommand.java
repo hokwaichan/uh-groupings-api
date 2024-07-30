@@ -1,9 +1,9 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.List;
+
 import edu.internet2.middleware.grouperClient.api.GcFindGroups;
 import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
-
-import java.util.List;
 
 /**
  * A wrapper for GcFindGroups. When a group or grouping path is passed, FindGroupsCommand on execute
@@ -13,8 +13,9 @@ public class FindGroupsCommand extends GrouperCommand implements Command<FindGro
     private final GcFindGroups gcFindGroups;
 
     public FindGroupsCommand() {
-        gcFindGroups = new GcFindGroups();
-        gcFindGroups.assignIncludeGroupDetail(true);
+        this.gcFindGroups = new GcFindGroups();
+        this.gcFindGroups.assignContentType("text/x-json"); // Remove after upgrading to Grouper 4
+        this.gcFindGroups.assignIncludeGroupDetail(true);
     }
 
     @Override

@@ -1,15 +1,16 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.List;
+
 import edu.internet2.middleware.grouperClient.api.GcDeleteMember;
 import edu.internet2.middleware.grouperClient.ws.beans.WsDeleteMemberResults;
-
-import java.util.List;
 
 public class RemoveMembersCommand extends GrouperCommand implements Command<RemoveMembersResults> {
     private final GcDeleteMember gcDeleteMember;
 
     public RemoveMembersCommand() {
-        gcDeleteMember = new GcDeleteMember();
+        this.gcDeleteMember = new GcDeleteMember();
+        this.gcDeleteMember.assignContentType("text/x-json"); // Remove after upgrading to Grouper 4
         includeUhMemberDetails(true);
     }
 

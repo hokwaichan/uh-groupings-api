@@ -1,9 +1,9 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.List;
+
 import edu.internet2.middleware.grouperClient.api.GcHasMember;
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
-
-import java.util.List;
 
 /**
  * A wrapper for GcHasMember.  When a group path and UH identifier are passed, HasMembersCommand on execute fetches,
@@ -15,10 +15,12 @@ public class HasMembersCommand extends GrouperCommand implements Command<HasMemb
 
     public HasMembersCommand() {
         this.gcHasMember = new GcHasMember();
+        this.gcHasMember.assignContentType("text/x-json"); // Remove after upgrading to Grouper 4
         this.gcHasMember.assignIncludeSubjectDetail(true);
     }
 
-    @Override public HasMembersResults execute() {
+    @Override
+    public HasMembersResults execute() {
         WsHasMemberResults wsHasMemberResults = gcHasMember.execute();
         return new HasMembersResults(wsHasMemberResults);
     }

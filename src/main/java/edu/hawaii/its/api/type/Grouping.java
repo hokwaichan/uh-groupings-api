@@ -1,10 +1,5 @@
 package edu.hawaii.its.api.type;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,8 +15,6 @@ public class Grouping {
     private Group owners;
 
     private boolean isEmpty;
-    private List<SyncDestination> syncDestinations = new ArrayList<>();
-    private Map<String, Boolean> syncDestinationsState = new HashMap<>();
     private boolean isOptInOn = false;
     private boolean isOptOutOn = false;
 
@@ -39,34 +32,6 @@ public class Grouping {
         setInclude(new EmptyGroup());
         setComposite(new EmptyGroup());
         setOwners(new EmptyGroup());
-    }
-
-    public List<SyncDestination> getSyncDestinations() {
-        return syncDestinations;
-    }
-
-    public void setSyncDestinations(List<SyncDestination> syncDestinations) {
-        this.syncDestinations = syncDestinations;
-
-        for (SyncDestination destination : syncDestinations) {
-
-            syncDestinationsState.put(destination.getName(), destination.isSynced());
-        }
-    }
-
-    public boolean isSyncDestinationOn(String key) {
-        return syncDestinationsState.get(key);
-    }
-
-    public void changeSyncDestinationState(String key, Boolean boo) {
-        syncDestinationsState.replace(key, boo);
-
-        for (SyncDestination destination : syncDestinations) {
-            if (destination.getName().equals(key)) {
-                destination.setSynced(boo);
-            }
-        }
-
     }
 
     public String getName() {

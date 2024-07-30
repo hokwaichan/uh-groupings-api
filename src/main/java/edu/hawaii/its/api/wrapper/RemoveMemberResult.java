@@ -1,6 +1,7 @@
 package edu.hawaii.its.api.wrapper;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsDeleteMemberResult;
+import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
 
 public class RemoveMemberResult extends Results {
     private final WsDeleteMemberResult wsDeleteMemberResult;
@@ -44,5 +45,14 @@ public class RemoveMemberResult extends Results {
 
     public Subject getSubject() {
         return new Subject(wsDeleteMemberResult.getWsSubject());
+    }
+
+    public void updateRemoveResults(String groupPath, String uhIdentifier) {
+        WsDeleteMemberResult wsDeleteMemberResult = this.wsDeleteMemberResult;
+        WsSubject wsSubject = wsDeleteMemberResult.getWsSubject();
+        if (wsSubject != null) {
+            wsSubject.setName(uhIdentifier);
+        }
+        wsDeleteMemberResult.setWsSubject(wsSubject);
     }
 }

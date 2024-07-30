@@ -1,12 +1,14 @@
 package edu.hawaii.its.api.wrapper;
 
-import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
-import edu.internet2.middleware.grouperClient.ws.beans.WsGroup;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
+import edu.internet2.middleware.grouperClient.ws.beans.WsGroup;
+import edu.internet2.middleware.grouperClientExt.com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class FindGroupsResults extends Results {
+
     private final WsFindGroupsResults wsFindGroupsResults;
 
     public FindGroupsResults(WsFindGroupsResults wsFindGroupsResults) {
@@ -47,6 +49,11 @@ public class FindGroupsResults extends Results {
             return new Group();
         }
         return new Group(wsGroups[0]);
+    }
+
+    @JsonIgnore
+    public WsFindGroupsResults getWsFindGroupsResults() {
+        return wsFindGroupsResults;
     }
 
 }

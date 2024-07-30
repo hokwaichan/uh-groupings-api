@@ -1,8 +1,22 @@
 package edu.hawaii.its.api.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
 import edu.hawaii.its.api.exception.AccessDeniedException;
 import edu.hawaii.its.api.exception.UhMemberNotFoundException;
@@ -10,20 +24,6 @@ import edu.hawaii.its.api.groupings.GroupingMembers;
 import edu.hawaii.its.api.groupings.GroupingReplaceGroupMembersResult;
 
 import edu.internet2.middleware.grouperClient.ws.GcWebServiceError;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @ActiveProfiles("integrationTest")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -58,7 +58,7 @@ public class TestUpdateMemberService {
     private MemberService memberService;
 
     @Autowired
-    private GrouperApiService grouperApiService;
+    private GrouperService grouperService;
 
     @Autowired
     private UhIdentifierGenerator uhIdentifierGenerator;
@@ -72,36 +72,36 @@ public class TestUpdateMemberService {
         testUids = testGroupingMembers.getUids();
         testUhUuids = testGroupingMembers.getUhUuids();
 
-        grouperApiService.removeMember(ADMIN, GROUPING_ADMINS, testUids.get(0));
-        grouperApiService.removeMembers(ADMIN, GROUPING_INCLUDE, testUids);
-        grouperApiService.removeMembers(ADMIN, GROUPING_EXCLUDE, testUids);
+        grouperService.removeMember(ADMIN, GROUPING_ADMINS, testUids.get(0));
+        grouperService.removeMembers(ADMIN, GROUPING_INCLUDE, testUids);
+        grouperService.removeMembers(ADMIN, GROUPING_EXCLUDE, testUids);
     }
 
     @Test
     public void addRemoveAdminTest() {
         // With uh number.
         assertFalse(memberService.isAdmin(testUhUuids.get(0)));
-        updateMemberService.addAdmin(ADMIN, testUhUuids.get(0));
+        updateMemberService.addAdminMember(ADMIN, testUhUuids.get(0));
         assertTrue(memberService.isAdmin(testUhUuids.get(0)));
-        updateMemberService.removeAdmin(ADMIN, testUhUuids.get(0));
+        updateMemberService.removeAdminMember(ADMIN, testUhUuids.get(0));
         assertFalse(memberService.isAdmin(testUhUuids.get(0)));
 
-        // With uh username.
+        // With uh uid.
         assertFalse(memberService.isAdmin(testUids.get(0)));
-        updateMemberService.addAdmin(ADMIN, testUids.get(0));
+        updateMemberService.addAdminMember(ADMIN, testUids.get(0));
         assertTrue(memberService.isAdmin(testUids.get(0)));
-        updateMemberService.removeAdmin(ADMIN, testUids.get(0));
+        updateMemberService.removeAdminMember(ADMIN, testUids.get(0));
         assertFalse(memberService.isAdmin(testUids.get(0)));
 
         try {
-            updateMemberService.addAdmin(ADMIN, "bogus-admin-to-add");
+            updateMemberService.addAdminMember(ADMIN, "bogus-admin-to-add");
             fail("Should throw an exception if an invalid adminToAdd is passed.");
         } catch (UhMemberNotFoundException e) {
             assertNull(e.getCause());
         }
 
         try {
-            updateMemberService.removeAdmin(ADMIN, "bogus-admin-to-remove");
+            updateMemberService.removeAdminMember(ADMIN, "bogus-admin-to-remove");
             fail("Should throw an exception if an invalid adminToRemove is passed.");
         } catch (UhMemberNotFoundException e) {
             assertNull(e.getCause());
@@ -365,6 +365,9 @@ public class TestUpdateMemberService {
         assertTrue(memberService.isMember(GROUPING_OWNERS, uid));
         updateMemberService.removeOwnership(ADMIN, GROUPING, uid);
         assertFalse(memberService.isMember(GROUPING_OWNERS, uid));
+        updateMemberService.addAdminMember(ADMIN, uid);
+        updateMemberService.removeOwnership(ADMIN, GROUPING, uid);
+        updateMemberService.removeAdminMember(ADMIN, uid);
     }
 
     @Test
@@ -440,11 +443,11 @@ public class TestUpdateMemberService {
     }
 
     private void addGroupMember(String groupPath, String uhIdentifier) {
-        grouperApiService.addMember(ADMIN, groupPath, uhIdentifier);
+        grouperService.addMember(ADMIN, groupPath, uhIdentifier);
     }
 
     private void removeGroupMember(String groupPath, String uhIdentifier) {
-        grouperApiService.removeMember(ADMIN, groupPath, uhIdentifier);
+        grouperService.removeMember(ADMIN, groupPath, uhIdentifier);
     }
 
 }

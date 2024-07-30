@@ -1,9 +1,9 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.List;
+
 import edu.internet2.middleware.grouperClient.api.GcAddMember;
 import edu.internet2.middleware.grouperClient.ws.beans.WsAddMemberResults;
-
-import java.util.List;
 
 /**
  * A wrapper for GcAddMember. When a UH identifier and group path are passed, AddMembersCommand on execute adds, to
@@ -17,6 +17,7 @@ public class AddMembersCommand extends GrouperCommand implements Command<AddMemb
 
     public AddMembersCommand() {
         this.gcAddMember = new GcAddMember();
+        this.gcAddMember.assignContentType("text/x-json"); // Remove after upgrading to Grouper 4
         includeUhMemberDetails(true);
     }
 

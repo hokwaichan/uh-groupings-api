@@ -1,9 +1,9 @@
 package edu.hawaii.its.api.wrapper;
 
+import java.util.List;
+
 import edu.internet2.middleware.grouperClient.api.GcGetAttributeAssignments;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
-
-import java.util.List;
 
 /**
  * A wrapper for GcGetAttributeAssignments. When an attribute is passed, GroupAttributeCommand on execute
@@ -15,6 +15,7 @@ public class GroupAttributeCommand extends GrouperCommand implements Command<Gro
 
     public GroupAttributeCommand() {
         this.gcGetAttributeAssignments = new GcGetAttributeAssignments();
+        this.gcGetAttributeAssignments.assignContentType("text/x-json"); // Remove after upgrading to Grouper 4
         this.gcGetAttributeAssignments.assignAttributeAssignType("group");
     }
 

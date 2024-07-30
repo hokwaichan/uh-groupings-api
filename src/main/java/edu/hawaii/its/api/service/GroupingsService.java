@@ -1,15 +1,8 @@
 package edu.hawaii.its.api.service;
 
-import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
-import edu.hawaii.its.api.type.GroupingPath;
-import edu.hawaii.its.api.type.OptType;
-import edu.hawaii.its.api.wrapper.Group;
-import edu.hawaii.its.api.wrapper.GroupAttribute;
-import edu.hawaii.its.api.wrapper.GroupAttributeResults;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import static edu.hawaii.its.api.service.PathFilter.parentGroupingPath;
+import static edu.hawaii.its.api.service.PathFilter.pathHasOwner;
+import static edu.hawaii.its.api.service.PathFilter.removeDuplicates;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,9 +11,15 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static edu.hawaii.its.api.service.PathFilter.pathHasOwner;
-import static edu.hawaii.its.api.service.PathFilter.removeDuplicates;
-import static edu.hawaii.its.api.service.PathFilter.parentGroupingPath;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
+import edu.hawaii.its.api.type.GroupingPath;
+import edu.hawaii.its.api.type.OptType;
+import edu.hawaii.its.api.wrapper.Group;
+import edu.hawaii.its.api.wrapper.GroupAttribute;
+import edu.hawaii.its.api.wrapper.GroupAttributeResults;
 
 @Service
 public class GroupingsService {
@@ -28,11 +27,14 @@ public class GroupingsService {
     @Value("${groupings.api.trio}")
     private String TRIO;
 
-    @Autowired
-    private GroupPathService groupPathService;
+    private final GroupPathService groupPathService;
 
-    @Autowired
-    private GrouperApiService grouperApiService;
+    private final GrouperService grouperService;
+
+    public GroupingsService(GroupPathService groupPathService, GrouperService grouperService) {
+        this.groupPathService = groupPathService;
+        this.grouperService = grouperService;
+    }
 
     /**
      * A list of grouping paths for all groupings.
@@ -42,10 +44,14 @@ public class GroupingsService {
     }
 
     public List<GroupingPath> allGroupingPaths() {
-        GroupAttributeResults groupAttributeResults = grouperApiService.groupAttributeResults(TRIO);
+        GroupAttributeResults groupAttributeResults = grouperService.groupAttributeResults(TRIO);
         return groupAttributeResults.getGroups().stream()
                 .map(group -> new GroupingPath(group.getGroupPath(), group.getDescription())).collect(
                         Collectors.toList());
+    }
+    public GroupAttributeResults allGroupAttributeResults() {
+        GroupAttributeResults groupAttributeResults = grouperService.groupAttributeResults(TRIO);
+        return groupAttributeResults;
     }
 
     /**
@@ -87,7 +93,7 @@ public class GroupingsService {
      * A list of all grouping paths of groups containing the optAttribute.
      */
     public List<String> allGroupingPaths(String optAttribute) {
-        GroupAttributeResults groupAttributeResults = grouperApiService.groupAttributeResults(optAttribute);
+        GroupAttributeResults groupAttributeResults = grouperService.groupAttributeResults(optAttribute);
         List<String> results = groupAttributeResults.getGroupAttributes().stream().map(GroupAttribute::getGroupPath)
                 .collect(Collectors.toList());
         return removeDuplicates(results);
@@ -98,7 +104,7 @@ public class GroupingsService {
      */
     private List<String> allGroupingPaths(String optAttribute, List<String> groupingPaths) {
         GroupAttributeResults groupAttributeResults =
-                grouperApiService.groupAttributeResults(optAttribute, groupingPaths);
+                grouperService.groupAttributeResults(optAttribute, groupingPaths);
         List<String> results = groupAttributeResults.getGroupAttributes().stream().map(GroupAttribute::getGroupPath)
                 .collect(Collectors.toList());
         return removeDuplicates(results);
@@ -131,7 +137,7 @@ public class GroupingsService {
     }
 
     public String getGroupingDescription(String path) {
-        Group group = grouperApiService.findGroupsResults(path).getGroup();
+        Group group = grouperService.findGroupsResults(path).getGroup();
         if (!groupPathService.isGroupingPath(group)) {
             return "";
         }
@@ -144,7 +150,7 @@ public class GroupingsService {
      * Grouping, the sub-groups are filtered out after grouper returns.
      */
     public List<GroupingPath> getGroupingPaths(List<String> groupPaths) {
-        return grouperApiService.findGroupsResults(groupPaths).getGroups().stream()
+        return grouperService.findGroupsResults(groupPaths).getGroups().stream()
                 .filter(group -> groupPathService.isGroupingPath(group)).collect(Collectors.toList()).stream()
                 .map(group -> new GroupingPath(group.getGroupPath(), group.getDescription()))
                 .collect(Collectors.toList());
@@ -152,7 +158,7 @@ public class GroupingsService {
 
     public GroupingUpdateDescriptionResult updateGroupingDescription(String path, String description) {
         String updatedDescription = getGroupingDescription(path);
-        return new GroupingUpdateDescriptionResult(grouperApiService.groupSaveResults(path, description),
+        return new GroupingUpdateDescriptionResult(grouperService.groupSaveResults(path, description),
                 updatedDescription);
     }
 
@@ -160,7 +166,7 @@ public class GroupingsService {
      * A list of all group paths, in which the uhIdentifier is listed..
      */
     public List<String> allGroupPaths(String uhIdentifier) {
-        List<Group> groups = grouperApiService.getGroupsResults(uhIdentifier).getGroups();
+        List<Group> groups = grouperService.getGroupsResults(uhIdentifier).getGroups();
         return groups.stream().map(Group::getGroupPath).collect(Collectors.toList());
     }
 }

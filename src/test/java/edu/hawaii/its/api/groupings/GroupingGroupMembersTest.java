@@ -1,17 +1,18 @@
 package edu.hawaii.its.api.groupings;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import edu.hawaii.its.api.util.JsonUtil;
 import edu.hawaii.its.api.util.PropertyLocator;
 import edu.hawaii.its.api.wrapper.GetMembersResults;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class GroupingGroupMembersTest {
 
@@ -35,6 +36,5 @@ public class GroupingGroupMembersTest {
         List<GroupingGroupMember> results = groupingGroupMembers.getMembers();
         assertNotNull(results);
         assertEquals(2, results.size());
-
     }
 }

@@ -1,7 +1,13 @@
 package edu.hawaii.its.api.service;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
 import edu.hawaii.its.api.util.PropertyLocator;
 
@@ -9,29 +15,20 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResult;
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsResultMeta;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class MemberAttributeServiceTest {
 
     private PropertyLocator propertyLocator;
 
     @MockBean
-    private GrouperApiService grouperApiService;
+    private GrouperService grouperService;
 
     @Autowired
     private MemberAttributeService memberAttributeService;
 
     final String groupAdminPath = "uh-settings:groupingAdmins";
     final String groupOwnerPath = "uh-settings:groupingOwners";
-    final String username = "uuu";
-    final String uid = "123";
+    final String uid = "uuu";
 
     @BeforeEach
     public void beforeEach() throws Exception {
@@ -44,7 +41,7 @@ public class MemberAttributeServiceTest {
     }
 
     /**
-     * Helper - getMemberAttributesSubjectFound, getMemberAttributesSubjectNotFound, getMemberAttributesNotAdminNotOwner, getMemberAttributesAdminButNotOwner, getMemberAttributesOwnerButNotAdmin
+     * Helper - getMemberAttributeResultsSubjectFound, getMemberAttributeResultsSubjectNotFound, getMemberAttributeResultsNotAdminNotOwner, getMemberAttributeResultsAdminButNotOwner, getMemberAttributeResultsOwnerButNotAdmin
      */
     private WsHasMemberResults makeWsHasMemberResults(final String resultCode) {
         return new WsHasMemberResults() {

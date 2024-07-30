@@ -1,31 +1,33 @@
 package edu.hawaii.its.api.wrapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
 import edu.hawaii.its.api.util.JsonUtil;
 import edu.hawaii.its.api.util.PropertyLocator;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 @ActiveProfiles("localTest")
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class SubjectTest {
 
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uids}")
+    private List<String> TEST_UIDS;
 
-    @Value("${groupings.api.test.uh-numbers}")
-    private List<String> TEST_NUMBERS;
+    @Value("${groupings.api.test.uh-uuids}")
+    private List<String> TEST_UH_UUIDS;
 
     @Value("${groupings.api.test.uh-names}")
     private List<String> TEST_NAMES;
@@ -58,8 +60,8 @@ public class SubjectTest {
 
     @Test
     public void accessors() {
-        String username = TEST_USERNAMES.get(0);
-        String number = TEST_NUMBERS.get(0);
+        String uid = TEST_UIDS.get(0);
+        String uhuuid = TEST_UH_UUIDS.get(0);
         String name = TEST_NAMES.get(0);
         String firstName = TEST_FIRSTNAMES.get(0);
         String lastName = TEST_LASTNAMES.get(0);
@@ -69,8 +71,8 @@ public class SubjectTest {
         Subject subject = new Subject(wsSubject);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(username, subject.getUid());
-        assertEquals(number, subject.getUhUuid());
+        assertEquals(uid, subject.getUid());
+        assertEquals(uhuuid, subject.getUhUuid());
         assertEquals(name, subject.getName());
         assertEquals(firstName, subject.getFirstName());
         assertEquals(lastName, subject.getLastName());
@@ -81,8 +83,8 @@ public class SubjectTest {
         subject = new Subject(wsSubject);
         assertNotNull(subject);
         assertEquals(SUCCESS, subject.getResultCode());
-        assertEquals(username, subject.getUid());
-        assertEquals(number, subject.getUhUuid());
+        assertEquals(uid, subject.getUid());
+        assertEquals(uhuuid, subject.getUhUuid());
         assertEquals(name, subject.getName());
         assertEquals(firstName, subject.getFirstName());
         assertEquals(lastName, subject.getLastName());
@@ -124,4 +126,130 @@ public class SubjectTest {
         assertEquals("", subject.getLastName());
 
     }
+
+    @Test
+    public void setFirstNameTest() {
+        WsSubject wsSubject = new WsSubject();
+        Subject subject = new Subject(wsSubject);
+        subject.setFirstName("firstName");
+        assertEquals("firstName", subject.getFirstName());
+        subject.setFirstName(null);
+        assertEquals("", subject.getFirstName());
+    }
+
+    @Test
+    public void setLastNameTest() {
+        WsSubject wsSubject = new WsSubject();
+        Subject subject = new Subject(wsSubject);
+        subject.setLastName("lastName");
+        assertEquals("lastName", subject.getLastName());
+        subject.setLastName(null);
+        assertEquals("", subject.getLastName());
+    }
+
+    @Test
+    public void setAttributeValueTest() {
+        Subject subject = new Subject();
+        subject.setAttributeValue(0, "value0");
+        subject.setAttributeValue(1, "value1");
+        subject.setAttributeValue(2, "value2");
+        subject.setAttributeValue(3, "value3");
+        subject.setAttributeValue(4, "value4");
+
+        assertEquals("value0", subject.getAttributeValue(0));
+        assertEquals("value1", subject.getAttributeValue(1));
+        assertEquals("value2", subject.getAttributeValue(2));
+        assertEquals("value3", subject.getAttributeValue(3));
+        assertEquals("value4", subject.getAttributeValue(4));
+    }
+
+    @Test
+    public void setResultCodeTest() {
+        WsSubject wsSubject = new WsSubject();
+        Subject subject = new Subject(wsSubject);
+        subject.setResultCode("resultCode");
+        assertEquals("resultCode", subject.getResultCode());
+        subject.setResultCode(null);
+        assertEquals("", subject.getResultCode());
+    }
+
+    @Test
+    public void setSourceIdTest() {
+        Subject subject = new Subject();
+        subject.setSourceId("sourceId");
+        assertEquals("sourceId", subject.getSourceId());
+        subject.setSourceId(null);
+        assertEquals("", subject.getSourceId());
+    }
+
+    @Test
+    public void equals() {
+        Subject subject0 = new Subject();
+        assertNotNull(subject0);
+        assertFalse(subject0.equals(""));
+        assertTrue(subject0.equals(subject0));
+
+        Subject subject1 = new Subject();
+        assertTrue(subject0.equals(subject1));
+        assertTrue(subject1.equals(subject0));
+
+        subject0.setName("name");
+        assertFalse(subject0.equals(subject1));
+        assertFalse(subject1.equals(subject0));
+        subject1.setName("name");
+        assertTrue(subject0.equals(subject1));
+        assertTrue(subject1.equals(subject0));
+
+        subject0.setUhUuid("uhUuid");
+        assertFalse(subject0.equals(subject1));
+        assertFalse(subject1.equals(subject0));
+        subject1.setUhUuid("uhUuid");
+        assertTrue(subject0.equals(subject1));
+        assertTrue(subject1.equals(subject0));
+
+        subject0.setUid("uid");
+        assertFalse(subject0.equals(subject1));
+        assertFalse(subject1.equals(subject0));
+        subject1.setUid("uid");
+        assertTrue(subject0.equals(subject1));
+        assertTrue(subject1.equals(subject0));
+    }
+
+    @Test
+    public void toStringTest() {
+        String name = "name";
+        String uid = "uid";
+        String uhUuid = "uhUuid";
+        Subject subject = new Subject();
+        subject.setName(name);
+        subject.setUid(uid);
+        subject.setUhUuid(uhUuid);
+        String expected = "Subject [" + "name=" + name + ", uhUuid=" + uhUuid + ", uid=" + uid + "]";
+        assertEquals(expected, subject.toString());
+    }
+
+    @Test
+    public void hasUHAttributesTest() {
+        WsSubject wsSubject = new WsSubject();
+        wsSubject.setAttributeValues(new String[]{"attribute"});
+        Subject subject = new Subject(wsSubject);
+        assertTrue(subject.hasUHAttributes());
+    }
+
+    @Test
+    public void hasUHAttributesNullTest() {
+        WsSubject wsSubject = new WsSubject();
+        wsSubject.setAttributeValues(null);
+        Subject subject = new Subject(wsSubject);
+        assertFalse(subject.hasUHAttributes());
+    }
+
+    @Test
+    public void hasUHAttributesEmptyTest() {
+        WsSubject wsSubject = new WsSubject();
+        wsSubject.setAttributeValues(new String[]{""});
+        Subject subject = new Subject(wsSubject);
+        assertFalse(subject.hasUHAttributes());
+    }
+
 }

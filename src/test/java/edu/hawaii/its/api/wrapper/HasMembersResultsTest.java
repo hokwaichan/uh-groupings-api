@@ -1,31 +1,31 @@
 package edu.hawaii.its.api.wrapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
 import edu.hawaii.its.api.util.JsonUtil;
 import edu.hawaii.its.api.util.PropertyLocator;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 @ActiveProfiles("localTest")
 @SpringBootTest(classes = { SpringBootWebApplication.class })
 public class HasMembersResultsTest {
 
-    @Value("${groupings.api.test.uh-usernames}")
-    private List<String> TEST_USERNAMES;
+    @Value("${groupings.api.test.uids}")
+    private List<String> TEST_UIDS;
 
-    @Value("${groupings.api.test.uh-numbers}")
-    private List<String> TEST_NUMBERS;
+    @Value("${groupings.api.test.uh-uuids}")
+    private List<String> TEST_UH_UUIDS;
 
     @Value("${groupings.api.test.uh-names}")
     private List<String> TEST_NAMES;
@@ -60,8 +60,8 @@ public class HasMembersResultsTest {
         int i = 0;
         for (HasMemberResult result : hasMembersResults.getResults()) {
             assertEquals("IS_MEMBER", result.getResultCode());
-            assertEquals(TEST_USERNAMES.get(i), result.getUid());
-            assertEquals(TEST_NUMBERS.get(i), result.getUhUuid());
+            assertEquals(TEST_UIDS.get(i), result.getUid());
+            assertEquals(TEST_UH_UUIDS.get(i), result.getUhUuid());
             assertEquals(TEST_NAMES.get(i), result.getName());
             i++;
         }
@@ -73,8 +73,8 @@ public class HasMembersResultsTest {
         i = 0;
         for (HasMemberResult result : hasMembersResults.getResults()) {
             assertEquals("IS_MEMBER", result.getResultCode());
-            assertEquals(TEST_USERNAMES.get(i), result.getUid());
-            assertEquals(TEST_NUMBERS.get(i), result.getUhUuid());
+            assertEquals(TEST_UIDS.get(i), result.getUid());
+            assertEquals(TEST_UH_UUIDS.get(i), result.getUhUuid());
             assertEquals(TEST_NAMES.get(i), result.getName());
             i++;
         }
