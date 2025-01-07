@@ -36,6 +36,10 @@ public class OotbGrouperApiService implements GrouperService {
         this.ootbGroupingPropertiesService = ootbGroupingPropertiesService;
     }
 
+    public HasMembersResults hasMemberCheck(String currentUser, String groupPath) {
+        return ootbGroupingPropertiesService.getHasMembersResults();
+    }
+
     /**
      * Check if a UH identifier is listed in a group.
      */

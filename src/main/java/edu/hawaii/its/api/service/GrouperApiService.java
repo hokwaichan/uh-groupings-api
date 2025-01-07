@@ -39,6 +39,12 @@ public class GrouperApiService implements GrouperService {
         this.exec = exec;
     }
 
+    public HasMembersResults hasMemberCheck(String currentUser, String groupPath) {
+        HasMembersResults hasMemberCheck = exec.execute(new HasMembersCommand()
+                .assignGroupPath(groupPath));
+        return hasMemberCheck;
+    }
+
     /**
      * Check if a UH identifier is listed in a group.
      */

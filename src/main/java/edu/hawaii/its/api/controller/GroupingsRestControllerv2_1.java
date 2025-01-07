@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import edu.hawaii.its.api.groupings.GroupingAddResult;
 import edu.hawaii.its.api.groupings.GroupingAddResults;
 import edu.hawaii.its.api.groupings.GroupingDescription;
+import edu.hawaii.its.api.groupings.GroupingExportableGroupsResults;
 import edu.hawaii.its.api.groupings.GroupingGroupMembers;
 import edu.hawaii.its.api.groupings.GroupingGroupsMembers;
 import edu.hawaii.its.api.groupings.GroupingMembers;
@@ -314,6 +315,20 @@ public class GroupingsRestControllerv2_1 {
                 .ok()
                 .body(groupingOwnerService
                         .getGroupingMembers(currentUser, groupingPath, page, size, sortString, isAscending));
+    }
+
+    /**
+     * Get exportable groups by a grouping path.
+     */
+    @GetMapping(value = "/groupings/{groupingPath}/export")
+    @ResponseBody
+    public ResponseEntity<GroupingExportableGroupsResults> getGroupingExportableGroups(
+            @RequestHeader(CURRENT_USER_KEY) String currentUser,
+            @PathVariable String groupingPath) {
+        logger.info("Entered REST getGroupingExportableGroups...");
+        return ResponseEntity
+                .ok()
+                .body(groupingOwnerService.getGroupingExportableGroups(currentUser, groupingPath));
     }
 
     /**

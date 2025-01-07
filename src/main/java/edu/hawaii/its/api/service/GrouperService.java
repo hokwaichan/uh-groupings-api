@@ -19,6 +19,8 @@ import edu.hawaii.its.api.wrapper.RemoveMembersResults;
 import edu.hawaii.its.api.wrapper.SubjectsResults;
 
 public interface GrouperService {
+    HasMembersResults hasMemberCheck(String currentUser, String groupPath);
+
     HasMembersResults hasMemberResults(String groupPath, String uhIdentifier);
 
     HasMembersResults hasMembersResults(String currentUser, String groupPath, List<String> uhIdentifiers);

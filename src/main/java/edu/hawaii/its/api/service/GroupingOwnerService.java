@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import edu.hawaii.its.api.exception.AccessDeniedException;
 import edu.hawaii.its.api.groupings.GroupingDescription;
+import edu.hawaii.its.api.groupings.GroupingExportableGroupsResults;
 import edu.hawaii.its.api.groupings.GroupingGroupMembers;
 import edu.hawaii.its.api.groupings.GroupingGroupsMembers;
 import edu.hawaii.its.api.groupings.GroupingMembers;
@@ -26,7 +27,9 @@ import edu.hawaii.its.api.wrapper.GetMembersResult;
 import edu.hawaii.its.api.wrapper.GetMembersResults;
 import edu.hawaii.its.api.wrapper.Group;
 import edu.hawaii.its.api.wrapper.GroupAttributeResults;
+import edu.hawaii.its.api.wrapper.HasMemberResult;
 import edu.hawaii.its.api.wrapper.HasMembersResults;
+import edu.hawaii.its.api.wrapper.HasMembersCommand;
 
 /**
  * GroupingOwnerService contains all the necessary functions to hydrate a selected grouping.
@@ -88,6 +91,12 @@ public class GroupingOwnerService {
                 sortString,
                 isAscending);
         return new GroupingGroupMembers(getMembersResult);
+    }
+
+    public GroupingExportableGroupsResults getGroupingExportableGroups(String currentUser, String groupingPath) {
+        log.debug(String.format("Checking exportable groups for user: %s, groupingPath: %s", currentUser, groupingPath));
+        HasMembersResults hasMemberCheck = grouperService.hasMemberCheck(currentUser, groupingPath);
+        return new GroupingExportableGroupsResults(hasMemberCheck);
     }
 
     public GroupingMembers getGroupingMembersWhereListed(String currentUser, String groupingPath, List<String> uhIdentifiers) {
