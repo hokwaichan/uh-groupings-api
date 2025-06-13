@@ -25,7 +25,9 @@ import edu.hawaii.its.api.groupings.GroupingAddResult;
 import edu.hawaii.its.api.groupings.GroupingAddResults;
 import edu.hawaii.its.api.groupings.GroupingDescription;
 import edu.hawaii.its.api.groupings.GroupingGroupMembers;
+import edu.hawaii.its.api.groupings.GroupingOwnerMembers;
 import edu.hawaii.its.api.groupings.GroupingGroupsMembers;
+import edu.hawaii.its.api.groupings.GroupingMembers;
 import edu.hawaii.its.api.groupings.GroupingMoveMemberResult;
 import edu.hawaii.its.api.groupings.GroupingMoveMembersResult;
 import edu.hawaii.its.api.groupings.GroupingOptAttributes;
@@ -35,6 +37,8 @@ import edu.hawaii.its.api.groupings.GroupingRemoveResults;
 import edu.hawaii.its.api.groupings.GroupingReplaceGroupMembersResult;
 import edu.hawaii.its.api.groupings.GroupingSyncDestinations;
 import edu.hawaii.its.api.groupings.GroupingUpdateDescriptionResult;
+import edu.hawaii.its.api.groupings.GroupingUpdateOptAttributeResult;
+import edu.hawaii.its.api.groupings.GroupingUpdateSyncDestResult;
 import edu.hawaii.its.api.groupings.ManageSubjectResults;
 import edu.hawaii.its.api.groupings.MemberAttributeResults;
 import edu.hawaii.its.api.groupings.MembershipResults;
@@ -43,19 +47,17 @@ import edu.hawaii.its.api.service.AsyncJobsManager;
 import edu.hawaii.its.api.service.GroupingAssignmentService;
 import edu.hawaii.its.api.service.GroupingAttributeService;
 import edu.hawaii.its.api.service.GroupingOwnerService;
+import edu.hawaii.its.api.service.GroupingsService;
 import edu.hawaii.its.api.service.MemberAttributeService;
 import edu.hawaii.its.api.service.MemberService;
 import edu.hawaii.its.api.service.MembershipService;
-import edu.hawaii.its.api.service.OotbGroupingPropertiesService;
 import edu.hawaii.its.api.service.UpdateMemberService;
 import edu.hawaii.its.api.type.Announcements;
 import edu.hawaii.its.api.type.AsyncJobResult;
-import edu.hawaii.its.api.type.GroupingsServiceResult;
-import edu.hawaii.its.api.type.OotbActiveProfileResult;
 import edu.hawaii.its.api.type.OptRequest;
 import edu.hawaii.its.api.type.OptType;
-import edu.hawaii.its.api.type.PreferenceStatus;
 import edu.hawaii.its.api.type.PrivilegeType;
+import edu.hawaii.its.api.type.SortBy;
 
 @RestController
 @RequestMapping("/api/groupings/v2.1")
@@ -84,7 +86,7 @@ public class GroupingsRestControllerv2_1 {
 
     private final AnnouncementsService announcementsService;
 
-    private final OotbGroupingPropertiesService ootbGroupingPropertiesService;
+    private final GroupingsService groupingsService;
 
     final private static String CURRENT_USER_KEY = "current_user";
 
@@ -97,7 +99,7 @@ public class GroupingsRestControllerv2_1 {
             MemberService memberService,
             GroupingOwnerService groupingOwnerService,
             AnnouncementsService announcementsService,
-            OotbGroupingPropertiesService ootbGroupingPropertiesService) {
+            GroupingsService groupingsService) {
         this.asyncJobsManager = asyncJobsManager;
         this.groupingAttributeService = groupingAttributeService;
         this.groupingAssignmentService = groupingAssignmentService;
@@ -107,7 +109,7 @@ public class GroupingsRestControllerv2_1 {
         this.memberService = memberService;
         this.groupingOwnerService = groupingOwnerService;
         this.announcementsService = announcementsService;
-        this.ootbGroupingPropertiesService = ootbGroupingPropertiesService;
+        this.groupingsService = groupingsService;
     }
 
     @PostConstruct
@@ -128,9 +130,20 @@ public class GroupingsRestControllerv2_1 {
     }
 
     /**
+     * Check if a grouping path is valid.
+     */
+    @GetMapping(value = "/grouping/{path:[\\w-:.]+}/is-valid")
+    @ResponseBody
+    public ResponseEntity<Boolean> groupingPathIsValid(@PathVariable String path) {
+        return ResponseEntity
+                .ok()
+                .body(groupingAttributeService.isGroupingPath(path));
+    }
+
+    /**
      * Get a list of all admins.
      */
-    @GetMapping(value = "/grouping-admins")
+    @GetMapping(value = "/groupings/admins")
     @ResponseBody
     public ResponseEntity<GroupingGroupMembers> groupingAdmins(@RequestHeader(CURRENT_USER_KEY) String currentUser) {
         logger.info("Entered REST groupingAdmins...");
@@ -142,7 +155,7 @@ public class GroupingsRestControllerv2_1 {
     /**
      * Get a list of all groupings.
      */
-    @GetMapping(value = "/all-groupings")
+    @GetMapping(value = "/groupings")
     @ResponseBody
     public ResponseEntity<GroupingPaths> allGroupings(@RequestHeader(CURRENT_USER_KEY) String currentUser) {
         logger.info("Entered REST allGroupings...");
@@ -268,26 +281,66 @@ public class GroupingsRestControllerv2_1 {
                 .accepted()
                 .body(asyncJobsManager.putJob(memberAttributeService.getMemberAttributeResultsAsync(currentUser, uhIdentifiers)));
     }
-
-    /**
-     * Get all the members of an owned grouping through paginated calls. This should be done through the UI using await.
-     * Currently, the UI is not using this function to hydrate grouping members, this implementation of getMembers is
-     * much faster than the current getMembers in use and should be used in the future ether when GROUPINGS-304 is
-     * completed on the UI or when the UI is migrated to the react framework.
-     */
     @PostMapping(value = "/groupings/group")
     @ResponseBody
     public ResponseEntity<GroupingGroupsMembers> ownedGrouping(@RequestHeader(CURRENT_USER_KEY) String currentUser,
                                                                @RequestBody List<String> groupPaths,
-                                                               @RequestParam(required = true) Integer page,
-                                                               @RequestParam(required = true) Integer size,
-                                                               @RequestParam(required = true) String sortString,
-                                                               @RequestParam(required = true) Boolean isAscending) {
-        logger.info("Entered REST getGrouping...");
+                                                               @RequestParam Integer page,
+                                                               @RequestParam Integer size,
+                                                               @RequestParam SortBy sortBy,
+                                                               @RequestParam Boolean isAscending) {
+        logger.info("Entered REST ownedGrouping...");
         return ResponseEntity
                 .ok()
                 .body(groupingOwnerService
-                        .paginatedGrouping(currentUser, groupPaths, page, size, sortString, isAscending));
+                        .paginatedGrouping(currentUser, groupPaths, page, size, sortBy.sortString(), isAscending));
+    }
+
+    /**
+     * Get paginated members by a grouping path.
+     */
+    @GetMapping(value = "/groupings/{groupingPath}")
+    @ResponseBody
+    public ResponseEntity<GroupingGroupMembers> getGroupingMembers(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                                   @PathVariable String groupingPath,
+                                                                   @RequestParam(required = false) Integer page,
+                                                                   @RequestParam(required = false) Integer size,
+                                                                   @RequestParam(required = true) SortBy sortBy,
+                                                                   @RequestParam Boolean isAscending,
+                                                                   @RequestParam(required = false) String searchString) {
+        logger.info("Entered REST getGroupingMembers...");
+        return ResponseEntity
+                .ok()
+                .body(groupingOwnerService
+                        .getGroupingMembers(currentUser, groupingPath, page, size, sortBy.sortString(), isAscending, searchString));
+    }
+
+    /**
+     * Get where listed information for members of a grouping path.
+     */
+    @PostMapping(value = "/groupings/{groupingPath}/where-listed")
+    @ResponseBody
+    public ResponseEntity<GroupingMembers> getGroupingMembersWhereListed(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                                         @PathVariable String groupingPath,
+                                                                         @RequestBody List<String> uhIdentifiers) {
+        logger.info("Entered REST getGroupingMembersWhereListed...");
+        return ResponseEntity
+                .ok()
+                .body(groupingOwnerService.getGroupingMembersWhereListed(currentUser, groupingPath, uhIdentifiers));
+    }
+
+    /**
+     * Get is basis information for members of a grouping path.
+     */
+    @PostMapping(value = "/groupings/{groupingPath}/is-basis")
+    @ResponseBody
+    public ResponseEntity<GroupingMembers> getGroupingMembersIsBasis(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                                     @PathVariable String groupingPath,
+                                                                     @RequestBody List<String> uhIdentifiers) {
+        logger.info("Entered REST getGroupingMembersIsBasis...");
+        return ResponseEntity
+                .ok()
+                .body(groupingOwnerService.getGroupingMembersIsBasis(currentUser, groupingPath, uhIdentifiers));
     }
 
     /**
@@ -450,11 +503,25 @@ public class GroupingsRestControllerv2_1 {
     public ResponseEntity<GroupingAddResults> addOwners(@RequestHeader(CURRENT_USER_KEY) String currentUser,
                                                         @PathVariable String path,
                                                         @PathVariable List<String> uhIdentifier) {
-        logger.info("Entered REST addOwner...");
+        logger.info("Entered REST addOwners...");
         return ResponseEntity
                 .ok()
                 .body(updateMemberService.addOwnerships(currentUser, path, uhIdentifier));
     }
+
+    /**
+     * Update grouping to add new path owners.
+     */
+    @PutMapping(value = "/groupings/{path:[\\w-:.]+}/owners/path-owner/{pathOwners}")
+    public ResponseEntity<GroupingAddResults> addGroupPathOwners(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                        @PathVariable String path,
+                                                        @PathVariable List<String> pathOwners) {
+        logger.info("Entered REST addGroupPathOwners...");
+        return ResponseEntity
+                .ok()
+                .body(updateMemberService.addGroupPathOwnerships(currentUser, path, pathOwners));
+    }
+
 
     /**
      * Delete a grouping owner.
@@ -467,6 +534,20 @@ public class GroupingsRestControllerv2_1 {
         return ResponseEntity
                 .ok()
                 .body(updateMemberService.removeOwnerships(currentUser, path, uhIdentifier));
+    }
+
+
+    /**
+     * Delete grouping group path owners.
+     */
+    @DeleteMapping(value = "/groupings/{path:[\\w-:.]+}/owners/path-owner/{pathOwners}")
+    public ResponseEntity<GroupingRemoveResults> removeGroupPathOwners(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                              @PathVariable String path,
+                                                              @PathVariable List<String> pathOwners) {
+        logger.info("Entered REST removeGroupPathOwners");
+        return ResponseEntity
+                .ok()
+                .body(updateMemberService.removeGroupPathOwnerships(currentUser, path, pathOwners));
     }
 
     /**
@@ -523,48 +604,37 @@ public class GroupingsRestControllerv2_1 {
     }
 
     /**
-     * Update grouping to enable given preference.
+     * Update grouping to enable/disable a sync destination.
      */
-    @PutMapping(value = "/groupings/{path:[\\w-:.]+}/sync-destination/{id:[\\w-:.]+}/enable")
-    public ResponseEntity<GroupingsServiceResult> enableSyncDest(
+    @PutMapping(value = "/groupings/{path:[\\w-:.]+}/sync-destination/{id:[\\w-:.]+}/{status}")
+    public ResponseEntity<GroupingUpdateSyncDestResult> updateSyncDest(
             @RequestHeader(CURRENT_USER_KEY) String currentUser,
             @PathVariable String path,
-            @PathVariable String id) {
+            @PathVariable String id,
+            @PathVariable boolean status) {
+        logger.info("Entered REST updateSyncDest");
         return ResponseEntity
                 .ok()
-                .body(groupingAttributeService.changeGroupAttributeStatus(path, currentUser, id, true));
+                .body(groupingAttributeService.updateGroupingSyncDest(path, currentUser, id, status));
     }
 
     /**
-     * Update grouping to disable given preference.
+     * Update grouping to enable/disable an opt attribute.
      */
-    @PutMapping(value = "/groupings/{path:[\\w-:.]+}/sync-destination/{id:[\\w-:.]+}/disable")
-    public ResponseEntity<GroupingsServiceResult> disableSyncDest(
-            @RequestHeader(CURRENT_USER_KEY) String currentUser,
-            @PathVariable String path,
-            @PathVariable String id) {
-        return ResponseEntity
-                .ok()
-                .body(groupingAttributeService.changeGroupAttributeStatus(path, currentUser, id, false));
-    }
-
-    /**
-     * Update grouping to toggle given preference.
-     */
-    @PutMapping(value = "/groupings/{path:[\\w-:.]+}/preference/{id:[\\w-:.]+}/{type:[\\w-:.]+}")
-    public ResponseEntity<List<GroupingsServiceResult>> togglePreference(
+    @PutMapping(value = "/groupings/{path:[\\w-:.]+}/opt-attribute/{id:[\\w-:.]+}/{status}")
+    public ResponseEntity<GroupingUpdateOptAttributeResult> updateOptAttribute(
             @RequestHeader(CURRENT_USER_KEY) String currentUser,
             @PathVariable String path,
             @PathVariable("id") OptType preferenceId,
-            @PathVariable("type") PreferenceStatus preferenceStatus) {
-        logger.info("Entered REST togglePreference");
+            @PathVariable boolean status) {
+        logger.info("Entered REST updateOptAttribute");
 
         OptRequest optInRequest = new OptRequest.Builder()
                 .withUid(currentUser)
                 .withGroupNameRoot(path)
                 .withPrivilegeType(PrivilegeType.IN)
                 .withOptType(preferenceId)
-                .withOptValue(preferenceStatus.toggle())
+                .withOptValue(status)
                 .build();
 
         OptRequest optOutRequest = new OptRequest.Builder()
@@ -572,36 +642,48 @@ public class GroupingsRestControllerv2_1 {
                 .withGroupNameRoot(path)
                 .withPrivilegeType(PrivilegeType.OUT)
                 .withOptType(preferenceId)
-                .withOptValue(preferenceStatus.toggle())
+                .withOptValue(status)
                 .build();
 
         return ResponseEntity
                 .ok()
-                .body(groupingAttributeService.changeOptStatus(optInRequest, optOutRequest));
+                .body(groupingAttributeService.updateOptAttribute(optInRequest, optOutRequest));
     }
 
     /**
      * True if currentUser is an owner.
      */
-    @GetMapping(value = "/owners")
+    @GetMapping(value = "/members/{uhIdentifier}/is-owner")
     @ResponseBody
-    public ResponseEntity<Boolean> hasOwnerPrivs(@RequestHeader(CURRENT_USER_KEY) String currentUser) {
+    public ResponseEntity<Boolean> hasOwnerPrivs(@PathVariable String uhIdentifier) {
         logger.info("Entered REST hasOwnerPrivs...");
         return ResponseEntity
                 .ok()
-                .body(memberService.isOwner(currentUser));
+                .body(memberService.isOwner(uhIdentifier));
+    }
+
+    /**
+     * True if user is an owner of the grouping.
+     */
+    @GetMapping(value = "/members/{path:[\\w-:.]+}/{uhIdentifier}/is-owner")
+    @ResponseBody
+    public ResponseEntity<Boolean> hasGroupingOwnerPrivs(@PathVariable String path, @PathVariable String uhIdentifier) {
+        logger.info("Entered REST hasGroupingOwnerPrivs...");
+        return ResponseEntity
+                .ok()
+                .body(memberService.isOwner(path, uhIdentifier));
     }
 
     /**
      * True if currentUser is an admin.
      */
-    @GetMapping(value = "/admins")
+    @GetMapping(value = "/members/{uhIdentifier}/is-admin")
     @ResponseBody
-    public ResponseEntity<Boolean> hasAdminPrivs(@RequestHeader(CURRENT_USER_KEY) String currentUser) {
+    public ResponseEntity<Boolean> hasAdminPrivs(@PathVariable String uhIdentifier) {
         logger.info("Entered REST hasAdminPrivs...");
         return ResponseEntity
                 .ok()
-                .body(memberService.isAdmin(currentUser));
+                .body(memberService.isAdmin(uhIdentifier));
     }
 
     /**
@@ -631,29 +713,43 @@ public class GroupingsRestControllerv2_1 {
     }
 
     /**
-     * Check if the user is a sole owner of a grouping
+     * Get number of grouping members
      */
-    @GetMapping(value = "/groupings/{path:[\\w-:.]+}/owners/{uhIdentifier}")
+    @GetMapping(value = "/groupings/{path}/count")
     @ResponseBody
-    public ResponseEntity<Boolean> isSoleOwner(@RequestHeader(CURRENT_USER_KEY) String currentUser,
-                                               @PathVariable String path, @PathVariable String uhIdentifier) {
-        logger.info("Entered REST getGroupingOwners...");
+    public ResponseEntity<Integer> getNumberOfGroupingMembers(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                              @PathVariable String path) {
+        logger.info("Enter REST getNumberOfGroupingMembers...");
         return ResponseEntity
                 .ok()
-                .body(groupingAssignmentService.isSoleOwner(currentUser, path, uhIdentifier));
+                .body(groupingOwnerService.numberOfGroupingMembers(currentUser, path));
     }
 
     /**
-     * A list of all owners listed in grouping.
+     * Check if the user is a sole owner of a grouping
+     */
+    @GetMapping(value = "/members/{path:[\\w-:.]+}/owners/{uhIdentifier}/count")
+    @ResponseBody
+    public ResponseEntity<Integer> getNumberOfOwners(@RequestHeader(CURRENT_USER_KEY) String currentUser,
+                                                     @PathVariable String path, @PathVariable String uhIdentifier) {
+        logger.info("Entered REST getNumberOfOwners...");
+        return ResponseEntity
+                .ok()
+                .body(groupingAssignmentService.numberOfImmediateOwners(currentUser, path, uhIdentifier));
+    }
+
+    /**
+     * A list of all immediate owners listed in a grouping.
+     * Owners with "IMMEDIATE" filter.
      */
     @GetMapping(value = "/grouping/{path:[\\w-:.]+}/owners")
-    public ResponseEntity<GroupingGroupMembers> groupingOwners(@RequestHeader(CURRENT_USER_KEY) String
+    public ResponseEntity<GroupingOwnerMembers> groupingOwners(@RequestHeader(CURRENT_USER_KEY) String
                                                                        currentUser,
                                                                @PathVariable String path) {
         logger.info("Entered REST groupingOwners...");
         return ResponseEntity
                 .ok()
-                .body(groupingAssignmentService.groupingOwners(currentUser, path));
+                .body(groupingAssignmentService.groupingImmediateOwners(currentUser, path));
     }
 
     /**
@@ -679,18 +775,4 @@ public class GroupingsRestControllerv2_1 {
                 .body(announcementsService.getAnnouncements());
     }
 
-    /**
-     * Update Ootb active user profile.
-     */
-    @PostMapping(value = "/activeProfile/ootb")
-    public ResponseEntity<OotbActiveProfileResult> updateOotbActiveUserProfile(@RequestBody List<String> authorities,
-                                                                               @RequestParam(required = true) String uid,
-                                                                               @RequestParam(required = true) String uhUuid,
-                                                                               @RequestParam(required = true) String name,
-                                                                               @RequestParam(required = true) String givenName) {
-        logger.debug("Entered REST updateActiveUserProfile...");
-        return ResponseEntity
-                .ok()
-                .body(ootbGroupingPropertiesService.updateActiveUserProfile(authorities, uid, uhUuid, name, givenName));
-    }
 }

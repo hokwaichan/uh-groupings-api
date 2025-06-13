@@ -25,6 +25,7 @@ import edu.hawaii.its.api.wrapper.GroupSaveCommand;
 import edu.hawaii.its.api.wrapper.GroupSaveResults;
 import edu.hawaii.its.api.wrapper.HasMembersCommand;
 import edu.hawaii.its.api.wrapper.HasMembersResults;
+import edu.hawaii.its.api.wrapper.MemberFilter;
 import edu.hawaii.its.api.wrapper.RemoveMemberResult;
 import edu.hawaii.its.api.wrapper.RemoveMembersCommand;
 import edu.hawaii.its.api.wrapper.RemoveMembersResults;
@@ -34,7 +35,7 @@ import edu.hawaii.its.api.wrapper.SubjectsResults;
 public class GrouperApiService implements GrouperService {
 
     private final ExecutorService exec;
-
+    
     public GrouperApiService(ExecutorService exec) {
         this.exec = exec;
     }
@@ -52,8 +53,9 @@ public class GrouperApiService implements GrouperService {
     /**
      * Check if multiple UH identifiers are listed in a group.
      */
-    public HasMembersResults hasMembersResults(String groupPath, List<String> uhIdentifiers) {
+    public HasMembersResults hasMembersResults(String currentUser, String groupPath, List<String> uhIdentifiers) {
         HasMembersResults hasMembersResults = exec.execute(new HasMembersCommand()
+                .owner(currentUser)
                 .assignGroupPath(groupPath)
                 .addUhIdentifiers(uhIdentifiers));
         return hasMembersResults;
@@ -110,6 +112,48 @@ public class GrouperApiService implements GrouperService {
         SubjectsResults subjectsResults = exec.execute(new SubjectsCommand()
                 .addSubjects(uhIdentifiers));
         return subjectsResults;
+    }
+
+    /**
+     * Get a list of members for a specific grouping path with search string
+     */
+    public SubjectsResults getSubjects(String groupingPath, String searchString) {
+        SubjectsResults subjectsResults = exec.execute(new SubjectsCommand()
+                .assignGroupingPath(groupingPath)
+                .assignSearchString(searchString));
+        return subjectsResults;
+    }
+
+    /**
+     * Get all immediate members of a grouping path (members with the "IMMEDIATE" filter)
+     */
+    public GetMembersResult getImmediateMembers(String currentUser, String groupPath) {
+        MemberFilter memberFilter = MemberFilter.IMMEDIATE;
+        GetMembersResults getMembersResults = exec.execute(new GetMembersCommand()
+                .owner(currentUser)
+                .addGroupPath(groupPath)
+                .assignMemberFilter(memberFilter));
+        List<GetMembersResult> result = getMembersResults.getMembersResults();
+        if (result.isEmpty()) {
+            return new GetMembersResult();
+        }
+        return result.get(0);
+    }
+
+    /**
+     * Get all members of a grouping (members with the "ALL" filter)
+     */
+    public GetMembersResult getAllMembers(String currentUser, String groupPath) {
+        MemberFilter memberFilter = MemberFilter.ALL;
+        GetMembersResults getMembersResults = exec.execute(new GetMembersCommand()
+                .owner(currentUser)
+                .addGroupPath(groupPath)
+                .assignMemberFilter(memberFilter));
+        List<GetMembersResult> result = getMembersResults.getMembersResults();
+        if (result.isEmpty()) {
+            return new GetMembersResult();
+        }
+        return result.get(0);
     }
 
     /**
@@ -246,7 +290,7 @@ public class GrouperApiService implements GrouperService {
      * implement the "act-as" requirements."
      */
     public FindAttributesResults findAttributesResults(String currentUser, String attributeTypeName,
-                                                       String searchScope) {
+            String searchScope) {
         return exec.execute(new FindAttributesCommand()
                 .owner(currentUser)
                 .assignAttributeName(attributeTypeName)
@@ -271,7 +315,16 @@ public class GrouperApiService implements GrouperService {
                 .owner(currentUser)
                 .assignGroupPath(groupPath)
                 .addUhIdentifiers(uhIdentifiers));
+    }
 
+    /**
+     * Add multiple path owners to a group owner listing.
+     */
+    public AddMembersResults addGroupPathOwners(String currentUser, String groupPath, List<String> groupPathOwners) {
+        return exec.execute(new AddMembersCommand()
+                .owner(currentUser)
+                .assignGroupPath(groupPath)
+                .addGroupPathOwners(groupPathOwners));
     }
 
     /**
@@ -295,6 +348,17 @@ public class GrouperApiService implements GrouperService {
     }
 
     /**
+     * Remove multiple path owners from a group owner listing.
+     */
+    public RemoveMembersResults removeGroupPathOwners(String currentUser, String groupPath,
+            List<String> groupPathOwners) {
+        return exec.execute(new RemoveMembersCommand()
+                .owner(currentUser)
+                .assignGroupPath(groupPath)
+                .addGroupPathOwners(groupPathOwners));
+    }
+
+    /**
      * Remove all listed members from a group.
      */
     public AddMembersResults resetGroupMembers(String groupPath) {
@@ -308,8 +372,9 @@ public class GrouperApiService implements GrouperService {
      * Add or remove an attribute from a group. This is used to update a groupings
      * preferences.
      */
-    public AssignAttributesResults assignAttributesResults(String currentUser, String assignType, String assignOperation, String groupPath,
-                                                           String attributeName) {
+    public AssignAttributesResults assignAttributesResults(String currentUser, String assignType,
+            String assignOperation, String groupPath,
+            String attributeName) {
         return exec.execute(new AssignAttributesCommand()
                 .owner(currentUser)
                 .setAssignType(assignType)
@@ -319,10 +384,28 @@ public class GrouperApiService implements GrouperService {
     }
 
     /**
+     * Add or remove an attribute from a group. This is used to update a groupings
+     * preferences.
+     * @param retry used to retry execution if it fails.
+     */
+    public AssignAttributesResults assignAttributesResults(String currentUser, String assignType,
+                                                           String assignOperation, String groupPath,
+                                                           String attributeName, boolean retry) {
+        return exec.execute(new AssignAttributesCommand()
+                .owner(currentUser)
+                .setAssignType(assignType)
+                .setAssignOperation(assignOperation)
+                .addGroupPath(groupPath)
+                .addAttribute(attributeName)
+                .setRetry(retry));
+    }
+
+    /**
      * Change a group attribute's privilege to true or false.
      */
-    public AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath, String privilegeName,
-                                                                       String uhIdentifier, boolean isAllowed) {
+    public AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath,
+            String privilegeName,
+            String uhIdentifier, boolean isAllowed) {
         return exec.execute(new AssignGrouperPrivilegesCommand()
                 .owner(currentUser)
                 .setGroupPath(groupPath)
@@ -332,10 +415,46 @@ public class GrouperApiService implements GrouperService {
     }
 
     /**
+     * Change a group attribute's privilege to true or false.
+     * @param retry used to retry execution if it fails.
+     */
+    public AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath,
+                                                                       String privilegeName,
+                                                                       String uhIdentifier, boolean isAllowed,
+                                                                       boolean retry) {
+        return exec.execute(new AssignGrouperPrivilegesCommand()
+                .owner(currentUser)
+                .setGroupPath(groupPath)
+                .setPrivilege(privilegeName)
+                .setSubjectLookup(uhIdentifier)
+                .setIsAllowed(isAllowed)
+                .setRetry(retry));
+    }
+
+    /**
+     * Get all members listed in a group.
+     */
+    public GetMembersResult getMembersResult(String currentUser, String groupPath, Integer pageNumber,
+            Integer pageSize, String sortString, Boolean isAscending) {
+        GetMembersResults getMembersResults = exec.execute(new GetMembersCommand()
+                .owner(currentUser)
+                .addGroupPath(groupPath)
+                .setPageNumber(pageNumber)
+                .setPageSize(pageSize)
+                .setAscending(isAscending)
+                .sortBy(sortString));
+        List<GetMembersResult> result = getMembersResults.getMembersResults();
+        if (result.isEmpty()) {
+            return new GetMembersResult();
+        }
+        return result.get(0);
+    }
+
+    /**
      * Get a list of members for each groupPath.
      */
     public GetMembersResults getMembersResults(String currentUser, List<String> groupPaths, Integer pageNumber,
-                                               Integer pageSize, String sortString, Boolean isAscending) {
+            Integer pageSize, String sortString, Boolean isAscending) {
         return exec.execute(new GetMembersCommand()
                 .owner(currentUser)
                 .addGroupPaths(groupPaths)

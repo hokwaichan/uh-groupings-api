@@ -1,5 +1,6 @@
 package edu.hawaii.its.api.service;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -21,7 +22,9 @@ import edu.hawaii.its.api.wrapper.RemoveMemberResult;
 import edu.hawaii.its.api.wrapper.RemoveMembersResults;
 import edu.hawaii.its.api.wrapper.SubjectsResults;
 
+import edu.internet2.middleware.grouperClient.ws.beans.WsAssignGrouperPrivilegesLiteResult;
 import edu.internet2.middleware.grouperClient.ws.beans.WsFindAttributeDefNamesResults;
+import edu.internet2.middleware.grouperClient.ws.beans.WsResultMeta;
 
 public class OotbGrouperApiService implements GrouperService {
 
@@ -32,20 +35,19 @@ public class OotbGrouperApiService implements GrouperService {
     public OotbGrouperApiService(OotbGroupingPropertiesService ootbGroupingPropertiesService) {
         this.ootbGroupingPropertiesService = ootbGroupingPropertiesService;
     }
+
     /**
      * Check if a UH identifier is listed in a group.
      */
     public HasMembersResults hasMemberResults(String groupPath, String uhIdentifier) {
-        HasMembersResults hasMembersResults = ootbGroupingPropertiesService.getHasMembersResults();
-        return hasMembersResults;
+        return ootbGroupingPropertiesService.getHasMembers(groupPath, uhIdentifier);
     }
 
     /**
      * Check if multiple UH identifiers are listed in a group.
      */
-    public HasMembersResults hasMembersResults(String groupPath, List<String> uhIdentifiers) {
-        HasMembersResults hasMembersResults = ootbGroupingPropertiesService.getHasMembersResults();
-        return hasMembersResults;
+    public HasMembersResults hasMembersResults(String currentUser, String groupPath, List<String> uhIdentifiers) {
+        return ootbGroupingPropertiesService.getHasMembersResults();
     }
 
     /**
@@ -87,6 +89,24 @@ public class OotbGrouperApiService implements GrouperService {
         return ootbGroupingPropertiesService.getSubjects(uhIdentifiers);
     }
 
+    public SubjectsResults getSubjects(String groupingPath, String searchString) {
+        return ootbGroupingPropertiesService.getSubject(groupingPath);
+    }
+
+    /**
+     * Not implemented yet
+     */
+    public GetMembersResult getImmediateMembers(String currentUser, String groupPath) {
+        return new GetMembersResult();
+    }
+
+    /**
+     * TODO: needs to be implemented if OOTB gets into production.
+     */
+    public GetMembersResult getAllMembers(String currentUser, String groupPath) {
+        return null;
+    }
+
     /**
      * Get all the groups with the specified attribute.
      */
@@ -105,7 +125,8 @@ public class OotbGrouperApiService implements GrouperService {
      * Check if a group contains an attribute.
      */
     public GroupAttributeResults groupAttributeResults(String attribute, String groupPath) {
-        return ootbGroupingPropertiesService.getGroupAttributeResults();
+        return ootbGroupingPropertiesService.getGroupAttributeResultsByAttributeAndGroupPathList(attribute,
+                Collections.singletonList(groupPath));
     }
 
     /**
@@ -141,7 +162,7 @@ public class OotbGrouperApiService implements GrouperService {
     }
 
     public GroupAttributeResults groupAttributeResult(String currentUser, String groupPath) {
-        return ootbGroupingPropertiesService.getGroupAttributeResults();
+        return ootbGroupingPropertiesService.getGroupAttributeResults(currentUser, groupPath);
     }
 
     /**
@@ -181,7 +202,7 @@ public class OotbGrouperApiService implements GrouperService {
      * containing a matching sync-dest attribute type string.
      */
     public FindAttributesResults findAttributesResults(String attributeTypeName, String searchScope) {
-        return new FindAttributesResults(new WsFindAttributeDefNamesResults());
+        return ootbGroupingPropertiesService.getFindAttributesResults();
     }
 
     /**
@@ -208,6 +229,13 @@ public class OotbGrouperApiService implements GrouperService {
     }
 
     /**
+     * Add multiple path owners to a group owner listing.
+     */
+    public AddMembersResults addGroupPathOwners(String currentUser, String groupPath, List<String> groupPathOwners) {
+        return ootbGroupingPropertiesService.addMembers(currentUser, groupPath, groupPathOwners);
+    }
+
+    /**
      * Remove a UH identifier from a group listing.
      */
     public RemoveMemberResult removeMember(String currentUser, String groupPath, String uhIdentifier) {
@@ -219,6 +247,15 @@ public class OotbGrouperApiService implements GrouperService {
      */
     public RemoveMembersResults removeMembers(String currentUser, String groupPath, List<String> uhIdentifiers) {
         return ootbGroupingPropertiesService.removeMembers(currentUser, groupPath, uhIdentifiers);
+    }
+
+    /**
+     * Remove multiple path owners from a group owner listing.
+     */
+
+    public RemoveMembersResults removeGroupPathOwners(String currentUser, String groupPath,
+            List<String> groupPathOwners) {
+        return ootbGroupingPropertiesService.removeMembers(currentUser, groupPath, groupPathOwners);
     }
 
     /**
@@ -235,7 +272,7 @@ public class OotbGrouperApiService implements GrouperService {
     public AssignAttributesResults assignAttributesResults(String currentUser, String assignType,
             String assignOperation, String groupPath,
             String attributeName) {
-        return ootbGroupingPropertiesService.getAssignAttributesResults();
+        return ootbGroupingPropertiesService.manageAttributeAssignment(currentUser, groupPath, attributeName, assignOperation);
     }
 
     /**
@@ -244,7 +281,46 @@ public class OotbGrouperApiService implements GrouperService {
     public AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath,
             String privilegeName,
             String uhIdentifier, boolean isAllowed) {
-        return new AssignGrouperPrivilegesResult();
+
+        WsAssignGrouperPrivilegesLiteResult wsAssignGrouperPrivilegesLiteResult =
+                new WsAssignGrouperPrivilegesLiteResult();
+        WsResultMeta resultMetadata = new WsResultMeta();
+        resultMetadata.setResultCode("SUCCESS");
+        wsAssignGrouperPrivilegesLiteResult.setResultMetadata(resultMetadata);
+
+        return new AssignGrouperPrivilegesResult(wsAssignGrouperPrivilegesLiteResult);
+    }
+
+    /**
+     * TODO: NEEDS TO BE IMPLEMENTED if we decide to use OOTB.
+     * Change a group attribute's privilege to true or false.
+     * @param retry used to retry execution if it fails.
+     */
+    public AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath,
+                                                                       String privilegeName,
+                                                                       String uhIdentifier, boolean isAllowed,
+                                                                       boolean retry) {
+        return null;
+    }
+
+    /**
+     * TODO NEEDS TO BE IMPLEMENTED if we decide to use OOTB.
+     * Add or remove an attribute from a group. This is used to update a groupings
+     * preferences.
+     * @param retry used to retry execution if it fails.
+     */
+    public AssignAttributesResults assignAttributesResults(String currentUser, String assignType,
+                                                           String assignOperation, String groupPath,
+                                                           String attributeName, boolean retry) {
+        return null;
+    }
+
+    /**
+     * Get all members listed in a group.
+     */
+    public GetMembersResult getMembersResult(String currentUser, String groupingPath, Integer pageNumber,
+            Integer pageSize, String sortString, Boolean isAscending) {
+        return ootbGroupingPropertiesService.getMembersByGroupPath(groupingPath);
     }
 
     /**

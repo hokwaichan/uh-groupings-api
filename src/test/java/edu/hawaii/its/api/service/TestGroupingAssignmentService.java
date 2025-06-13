@@ -22,12 +22,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import edu.hawaii.its.api.configuration.SpringBootWebApplication;
 import edu.hawaii.its.api.exception.AccessDeniedException;
 import edu.hawaii.its.api.groupings.GroupingGroupMembers;
+import edu.hawaii.its.api.groupings.GroupingOwnerMembers;
 import edu.hawaii.its.api.groupings.GroupingPaths;
 import edu.hawaii.its.api.type.Group;
 import edu.hawaii.its.api.type.GroupType;
@@ -69,7 +70,7 @@ public class TestGroupingAssignmentService {
     @Autowired
     private GrouperService grouperService;
 
-    @SpyBean
+    @MockitoSpyBean
     private GroupingsService groupingsService;
 
     @Autowired
@@ -194,27 +195,55 @@ public class TestGroupingAssignmentService {
     }
 
     @Test
-    public void groupingOwners() {
+    public void groupingImmediateOwners() {
         updateMemberService.removeOwnership(ADMIN, GROUPING, testUid);
-        GroupingGroupMembers groupingGroupMembers = groupingAssignmentService.groupingOwners(ADMIN, GROUPING);
-        assertNotNull(groupingGroupMembers);
-        assertFalse(groupingGroupMembers.getMembers().stream()
+        GroupingOwnerMembers GroupingOwnerMembers = groupingAssignmentService.groupingImmediateOwners(ADMIN, GROUPING);
+        assertNotNull(GroupingOwnerMembers);
+        assertFalse(GroupingOwnerMembers.getOwners().getMembers().stream()
                 .anyMatch(groupingsGroupMember -> groupingsGroupMember.getUid().equals(testUid)));
 
         updateMemberService.addOwnership(ADMIN, GROUPING, testUid);
-        groupingGroupMembers = groupingAssignmentService.groupingOwners(ADMIN, GROUPING);
-        assertNotNull(groupingGroupMembers);
-        assertTrue(groupingGroupMembers.getMembers().stream()
+        GroupingOwnerMembers = groupingAssignmentService.groupingImmediateOwners(ADMIN, GROUPING);
+        assertNotNull(GroupingOwnerMembers);
+        assertTrue(GroupingOwnerMembers.getOwners().getMembers().stream()
                 .anyMatch(groupingsGroupMember -> groupingsGroupMember.getUid().equals(testUid)));
         updateMemberService.removeOwnership(ADMIN, GROUPING, testUid);
     }
 
     @Test
-    public void isSoleOwner() {
-        updateMemberService.addOwnership(ADMIN, GROUPING, ADMIN);
+    public void groupingAllOwners() {
+        updateMemberService.removeOwnership(ADMIN, GROUPING, testUid);
+        GroupingOwnerMembers GroupingOwnerMembers = groupingAssignmentService.groupingAllOwners(ADMIN, GROUPING);
+        assertNotNull(GroupingOwnerMembers);
+        assertFalse(GroupingOwnerMembers.getOwners().getMembers().stream()
+                .anyMatch(groupingsGroupMember -> groupingsGroupMember.getUid().equals(testUid)));
+
         updateMemberService.addOwnership(ADMIN, GROUPING, testUid);
-        assertFalse(groupingAssignmentService.isSoleOwner(ADMIN, GROUPING, ADMIN));
+        GroupingOwnerMembers = groupingAssignmentService.groupingAllOwners(ADMIN, GROUPING);
+        assertNotNull(GroupingOwnerMembers);
+        assertTrue(GroupingOwnerMembers.getOwners().getMembers().stream()
+                .anyMatch(groupingsGroupMember -> groupingsGroupMember.getUid().equals(testUid)));
         updateMemberService.removeOwnership(ADMIN, GROUPING, testUid);
     }
 
+    // TODO: these needs to be enhanced by adding an actual grouping with fixed owners as path owners.
+    @Test
+    public void numberOfImmediateOwners() {
+        grouperService.removeMember(ADMIN, GROUPING_OWNERS, testUid);
+        int initialOwners = groupingAssignmentService.numberOfImmediateOwners(ADMIN, GROUPING, ADMIN);
+        updateMemberService.addOwnership(ADMIN, GROUPING, testUid);
+        assertEquals(initialOwners + 1, groupingAssignmentService.numberOfImmediateOwners(ADMIN, GROUPING, ADMIN));
+        updateMemberService.removeOwnership(ADMIN, GROUPING, testUid);
+        assertEquals(initialOwners, groupingAssignmentService.numberOfImmediateOwners(ADMIN, GROUPING, ADMIN));
+    }
+
+    @Test
+    public void numberOfAllOwners() {
+        grouperService.removeMember(ADMIN, GROUPING_OWNERS, testUid);
+        int initialOwners = groupingAssignmentService.numberOfAllOwners(ADMIN, GROUPING);
+        updateMemberService.addOwnership(ADMIN, GROUPING, testUid);
+        assertEquals(initialOwners + 1, groupingAssignmentService.numberOfAllOwners(ADMIN, GROUPING));
+        updateMemberService.removeOwnership(ADMIN, GROUPING, testUid);
+        assertEquals(initialOwners, groupingAssignmentService.numberOfAllOwners(ADMIN, GROUPING));
+    }
 }

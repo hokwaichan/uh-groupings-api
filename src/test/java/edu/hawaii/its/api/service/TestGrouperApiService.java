@@ -1,5 +1,6 @@
 package edu.hawaii.its.api.service;
 
+import static com.jayway.jsonpath.internal.function.ParamType.JSON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -8,9 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,6 +46,8 @@ import edu.hawaii.its.api.wrapper.RemoveMembersResults;
 import edu.hawaii.its.api.wrapper.Subject;
 import edu.hawaii.its.api.wrapper.SubjectsResults;
 
+import edu.internet2.middleware.grouperClient.ws.WsMemberFilter;
+
 @ActiveProfiles("integrationTest")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(classes = { SpringBootWebApplication.class })
@@ -50,6 +55,12 @@ public class TestGrouperApiService {
 
     @Value("${groupings.api.test.grouping_many}")
     private String GROUPING;
+
+    @Value("${groupings.api.test.grouping_single}")
+    private String GROUPING_SINGLE;
+
+    @Value("${groupings.api.test.grouping_single_owners}")
+    private String GROUPING_SINGLE_OWNERS;
 
     @Value("${groupings.api.test.grouping_many_include}")
     private String GROUPING_INCLUDE;
@@ -118,13 +129,24 @@ public class TestGrouperApiService {
     }
 
     @Test
-    public void hasMemberResult() {
+    public void hasMemberResults() {
         HasMembersResults hasMembersResults = grouperService.hasMemberResults(GROUPING_INCLUDE, ADMIN);
         assertNotNull(hasMembersResults);
         assertEquals("SUCCESS", hasMembersResults.getResultCode());
         List<HasMemberResult> memberResults = hasMembersResults.getResults();
         assertEquals(1, memberResults.size());
         assertEquals(ADMIN, memberResults.get(0).getUid());
+    }
+
+    @Test
+    public void hasMembersResults() {
+        HasMembersResults hasMembersResults = grouperService.hasMembersResults(ADMIN, GROUPING_INCLUDE, testUids);
+        assertNotNull(hasMembersResults);
+        assertEquals("SUCCESS", hasMembersResults.getResultCode());
+        List<HasMemberResult> memberResults = hasMembersResults.getResults();
+        assertEquals(testUids.size(), memberResults.size());
+        assertTrue(IntStream.range(0, testUids.size())
+                .allMatch(i -> testUids.get(i).equals(memberResults.get(i).getUid())));
     }
 
     @Test
@@ -277,6 +299,30 @@ public class TestGrouperApiService {
     }
 
     @Test
+    public void getImmediateMembers() {
+        grouperService.addGroupPathOwners(ADMIN, GROUPING_OWNERS, Collections.singletonList(GROUPING_SINGLE));
+        GetMembersResult immediateMembers = grouperService.getImmediateMembers(ADMIN, GROUPING_OWNERS);
+        assertNotNull(immediateMembers);
+        assertEquals("SUCCESS", immediateMembers.getResultCode());
+        SubjectsResults subjectsResults = grouperService.getSubjects(GROUPING_OWNERS, GROUPING_SINGLE);
+        assertNotNull(subjectsResults);
+        assertEquals("SUCCESS", subjectsResults.getResultCode());
+        grouperService.removeGroupPathOwners(ADMIN, GROUPING_OWNERS, Collections.singletonList(GROUPING_SINGLE));
+    }
+
+    @Test
+    public void getAllMembers() {
+        grouperService.addGroupPathOwners(ADMIN, GROUPING_OWNERS, Collections.singletonList(GROUPING_SINGLE));
+        GetMembersResult allMembers = grouperService.getAllMembers(ADMIN, GROUPING_OWNERS);
+        assertNotNull(allMembers);
+        assertEquals("SUCCESS", allMembers.getResultCode());
+        SubjectsResults subjectsResults = grouperService.getSubjects(GROUPING_OWNERS, GROUPING_SINGLE);
+        assertNotNull(subjectsResults);
+        assertEquals("SUCCESS", subjectsResults.getResultCode());
+        grouperService.removeGroupPathOwners(ADMIN, GROUPING_OWNERS, Collections.singletonList(GROUPING_SINGLE));
+    }
+
+    @Test
     public void groupAttributeResults() {
         String optIn = OptType.IN.value();
         String optOut = OptType.OUT.value();
@@ -342,6 +388,18 @@ public class TestGrouperApiService {
         assertNotNull(getMembersResult);
         assertEquals("SUCCESS", getMembersResult.getResultCode());
         // Todo exception handler for invalid paths.
+
+        getMembersResult = grouperService.getMembersResult(
+                ADMIN,
+                GROUPING_LARGE_BASIS,
+                1,
+                20,
+                "name",
+                true);
+        assertNotNull(getMembersResult);
+        assertEquals("SUCCESS", getMembersResult.getResultCode());
+        assertEquals(GROUPING_LARGE_BASIS, getMembersResult.getGroup().getGroupPath());
+        assertFalse(getMembersResult.getSubjects().isEmpty());
     }
 
     @Test
@@ -460,6 +518,26 @@ public class TestGrouperApiService {
         assertNull(addMembersResults); // Todo exception handler
         removeMembersResults = grouperService.removeMembers(ADMIN, "invalid-path", testUids);
         assertNull(removeMembersResults); // Todo exception handler
+    }
+
+    @Test
+    public void addRemovePathOwners() {
+        // With Group Path.
+        AddMembersResults addMembersResults = grouperService.addGroupPathOwners(ADMIN, GROUPING_OWNERS, Collections.singletonList(GROUPING));
+        assertNotNull(addMembersResults);
+        assertEquals("SUCCESS", addMembersResults.getResultCode());
+
+        RemoveMembersResults removeMembersResults = grouperService.removeGroupPathOwners(ADMIN, GROUPING_OWNERS, Collections.singletonList(GROUPING));
+        assertNotNull(removeMembersResults);
+        assertEquals("SUCCESS", removeMembersResults.getResultCode());
+
+        // Add and Remove duplicated group path owners
+        addMembersResults = grouperService.addGroupPathOwners(ADMIN, GROUPING_OWNERS, Arrays.asList(GROUPING, GROUPING));
+        assertNotNull(addMembersResults);
+        assertEquals("SUCCESS_ALREADY_EXISTED", addMembersResults.getResults().get(addMembersResults.getResults().size()-1).getResultCode());
+        removeMembersResults = grouperService.removeGroupPathOwners(ADMIN, GROUPING_OWNERS, Arrays.asList(GROUPING, GROUPING));
+        assertNotNull(removeMembersResults);
+        assertEquals("SUCCESS_WASNT_IMMEDIATE", removeMembersResults.getResults().get(removeMembersResults.getResults().size()-1).getResultCode());
     }
 
     @Test

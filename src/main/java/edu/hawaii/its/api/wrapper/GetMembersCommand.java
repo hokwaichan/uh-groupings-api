@@ -3,19 +3,20 @@ package edu.hawaii.its.api.wrapper;
 import java.util.List;
 
 import edu.internet2.middleware.grouperClient.api.GcGetMembers;
+import edu.internet2.middleware.grouperClient.ws.WsMemberFilter;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetMembersResults;
 
 /**
  * A wrapper for GcGetMembers. When groupPath(s) are passed, GetMembersCommand on execute fetches, from grouper, results
  * containing all the members of that group at groupPath.
  */
-public class GetMembersCommand extends GrouperCommand implements Command<GetMembersResults> {
+public class GetMembersCommand extends GrouperCommand<GetMembersCommand> implements Command<GetMembersResults> {
 
     private final GcGetMembers gcGetMembers;
 
     public GetMembersCommand() {
         this.gcGetMembers = new GcGetMembers();
-        this.gcGetMembers.assignContentType("text/x-json"); // Remove after upgrading to Grouper 4
+        this.gcGetMembers.assignContentType("text/x-json"); // TODO: Remove after upgrading to Grouper 4
         this.gcGetMembers.assignIncludeSubjectDetail(true);
     }
 
@@ -23,6 +24,11 @@ public class GetMembersCommand extends GrouperCommand implements Command<GetMemb
     public GetMembersResults execute() {
         WsGetMembersResults wsGetMembersResults = gcGetMembers.execute();
         return new GetMembersResults(wsGetMembersResults);
+    }
+
+    @Override
+    protected GetMembersCommand self() {
+        return this;
     }
 
     public GetMembersCommand addGroupPaths(List<String> groupPaths) {
@@ -64,6 +70,11 @@ public class GetMembersCommand extends GrouperCommand implements Command<GetMemb
 
     public GetMembersCommand addSubjectAttribute(String subjectAttribute) {
         gcGetMembers.addSubjectAttributeName(subjectAttribute);
+        return this;
+    }
+
+    public GetMembersCommand assignMemberFilter(MemberFilter memberFilter) {
+        gcGetMembers.assignMemberFilter(memberFilter.value());
         return this;
     }
 }

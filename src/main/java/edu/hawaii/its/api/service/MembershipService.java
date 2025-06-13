@@ -18,15 +18,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
 
 import edu.hawaii.its.api.exception.AccessDeniedException;
-import edu.hawaii.its.api.exception.UhMemberNotFoundException;
-import edu.hawaii.its.api.groupings.MembershipResults;
+import edu.hawaii.its.api.exception.UhIdentifierNotFoundException;
 import edu.hawaii.its.api.groupings.ManageSubjectResults;
+import edu.hawaii.its.api.groupings.MembershipResults;
 import edu.hawaii.its.api.type.GroupType;
 import edu.hawaii.its.api.type.ManageSubjectResult;
 import edu.hawaii.its.api.type.MembershipResult;
 import edu.hawaii.its.api.wrapper.Group;
-
-import edu.internet2.middleware.grouperClient.ws.GcWebServiceError;
 
 @Service("membershipService")
 public class MembershipService {
@@ -63,7 +61,7 @@ public class MembershipService {
         }
         String uhUuid = subjectService.getValidUhUuid(uid);
         if (uhUuid.equals("")) {
-            throw new UhMemberNotFoundException(uid);
+            throw new UhIdentifierNotFoundException(uid);
         }
         // Get all basis, include and exclude paths from grouper.
         List<String> basisIncludeExcludePaths =
@@ -76,23 +74,34 @@ public class MembershipService {
         // The disjoint of basis plus include and exclude: (Basis + Include) - Exclude
         List<String> groupingMembershipPaths = disjoint(parentGroupingPaths(basisIncludeExcludePaths),
                 parentGroupingPaths(excludePaths));
+        // A list of all group paths, in which the uhIdentifier is listed (including curated groupings), so we can find the intersection with curated groupings
+        List<String> trioAndCuratedGroupingsPaths = groupingsService.allGroupPaths(uid);
+        // The list of all curated groupings
+        List<String> curatedGroupingsPaths = groupingsService.curatedGroupings();
+        // Intersect the two lists so groupAndCuratedGroupingsPaths is all curated paths the uhIdentifier is listed
+        curatedGroupingsPaths.retainAll(trioAndCuratedGroupingsPaths);
         // Send all the grouping Membership paths to grouper to obtain grouping descriptions.
         List<Group> membershipGroupings = groupPathService.getValidGroupings(groupingMembershipPaths);
         // Get a list of groupings paths of all basis and include groups that have the opt-out attribute.
         List<String> optOutList = groupingsService.optOutEnabledGroupingPaths(parentGroupingPaths(basisAndInclude));
 
-        List<MembershipResult> memberships = createMemberships(membershipGroupings, optOutList);
+        List<MembershipResult> memberships =
+                createMemberships(membershipGroupings, optOutList, curatedGroupingsPaths);
         return new MembershipResults(memberships);
     }
 
-    private List<MembershipResult> createMemberships(List<Group> membershipGroupings, List<String> optOutList) {
+    private List<MembershipResult> createMemberships(List<Group> membershipGroupings, List<String> optOutList,
+            List<String> curatedGroupingsPaths) {
         List<MembershipResult> memberships = new ArrayList<>();
         for (Group grouping : membershipGroupings) {
-            MembershipResult membershipResult = new MembershipResult();
-            membershipResult.setDescription(grouping.getDescription());
-            membershipResult.setPath(grouping.getGroupPath());
-            membershipResult.setName(nameGroupingPath(grouping.getGroupPath()));
-            membershipResult.setOptOutEnabled(optOutList.contains(grouping.getGroupPath()));
+            MembershipResult membershipResult =
+                    new MembershipResult(grouping.getGroupPath(), nameGroupingPath(grouping.getGroupPath()),
+                            grouping.getDescription());
+            membershipResult.setOptOutEnabled(optOutList.contains(membershipResult.getPath()));
+            memberships.add(membershipResult);
+        }
+        for (String grouping : curatedGroupingsPaths) {
+            MembershipResult membershipResult = new MembershipResult(grouping, grouping, "");
             memberships.add(membershipResult);
         }
         return memberships;
@@ -114,7 +123,7 @@ public class MembershipService {
         List<String> groupPaths;
         try {
             groupPaths = groupingsService.allGroupPaths(uid);
-        } catch (GcWebServiceError e) {
+        } catch (Exception e) {
             logger.warn("membershipResults;" + e);
             return manageSubjectResults;
         }

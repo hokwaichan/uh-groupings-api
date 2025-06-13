@@ -1,6 +1,7 @@
 package edu.hawaii.its.api.wrapper;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,5 +28,7 @@ public class GetMembersCommandTest {
         assertNotNull(getMembersCommand.sortBy(""));
         assertNotNull(getMembersCommand.owner(""));
         assertNotNull(getMembersCommand.addSubjectAttribute(""));
+        assertNotNull(getMembersCommand.assignMemberFilter(MemberFilter.ALL));
+        assertEquals(getMembersCommand.self(), getMembersCommand);
     }
 }

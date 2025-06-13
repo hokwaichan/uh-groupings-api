@@ -1,5 +1,7 @@
 package edu.hawaii.its.api.service;
 
+import java.util.List;
+
 import edu.hawaii.its.api.wrapper.AddMemberResult;
 import edu.hawaii.its.api.wrapper.AddMembersResults;
 import edu.hawaii.its.api.wrapper.AssignAttributesResults;
@@ -16,12 +18,10 @@ import edu.hawaii.its.api.wrapper.RemoveMemberResult;
 import edu.hawaii.its.api.wrapper.RemoveMembersResults;
 import edu.hawaii.its.api.wrapper.SubjectsResults;
 
-import java.util.List;
-
 public interface GrouperService {
     HasMembersResults hasMemberResults(String groupPath, String uhIdentifier);
 
-    HasMembersResults hasMembersResults(String groupPath, List<String> uhIdentifiers);
+    HasMembersResults hasMembersResults(String currentUser, String groupPath, List<String> uhIdentifiers);
 
     GroupSaveResults groupSaveResults(String groupingPath, String description);
 
@@ -34,6 +34,12 @@ public interface GrouperService {
     SubjectsResults getSubjects(String uhIdentifier);
 
     SubjectsResults getSubjects(List<String> uhIdentifiers);
+
+    SubjectsResults getSubjects(String groupingPath, String searchString);
+
+    GetMembersResult getImmediateMembers(String currentUser, String groupPath);
+
+    GetMembersResult getAllMembers(String currentUser, String groupPath);
 
     GroupAttributeResults groupAttributeResults(String attribute);
 
@@ -69,15 +75,25 @@ public interface GrouperService {
 
     AddMembersResults addMembers(String currentUser, String groupPath, List<String> uhIdentifiers);
 
+    AddMembersResults addGroupPathOwners(String currentUser, String groupPath, List<String> groupPathOwners);
+
     RemoveMemberResult removeMember(String currentUser, String groupPath, String uhIdentifier);
 
     RemoveMembersResults removeMembers(String currentUser, String groupPath, List<String> uhIdentifiers);
+
+    RemoveMembersResults removeGroupPathOwners(String currentUser, String groupPath, List<String> groupPathOwners);
 
     AddMembersResults resetGroupMembers(String groupPath);
 
     AssignAttributesResults assignAttributesResults(String currentUser, String assignType, String assignOperation, String groupPath, String attributeName);
 
+    AssignAttributesResults assignAttributesResults(String currentUser, String assignType, String assignOperation, String groupPath, String attributeName, boolean retry);
+
     AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath, String privilegeName, String uhIdentifier, boolean isAllowed);
+
+    AssignGrouperPrivilegesResult assignGrouperPrivilegesResult(String currentUser, String groupPath, String privilegeName, String uhIdentifier, boolean isAllowed, boolean retry);
+
+    GetMembersResult getMembersResult(String currentUser, String groupingPath, Integer pageNumber, Integer pageSize, String sortString, Boolean isAscending);
 
     GetMembersResults getMembersResults(String currentUser, List<String> groupPaths, Integer pageNumber, Integer pageSize, String sortString, Boolean isAscending);
 }

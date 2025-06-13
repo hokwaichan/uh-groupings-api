@@ -5,10 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Profile;
 
-import edu.hawaii.its.api.service.ExecutorService;
-import edu.hawaii.its.api.service.GrouperApiService;
 import edu.hawaii.its.api.service.GrouperService;
 import edu.hawaii.its.api.service.OotbGrouperApiService;
 import edu.hawaii.its.api.service.OotbGroupingPropertiesService;
@@ -17,6 +15,7 @@ import edu.hawaii.its.api.util.PropertyLocator;
 import edu.hawaii.its.api.wrapper.AddMembersResults;
 import edu.hawaii.its.api.wrapper.AssignAttributesResults;
 import edu.hawaii.its.api.wrapper.AssignGrouperPrivilegesResult;
+import edu.hawaii.its.api.wrapper.FindAttributesResults;
 import edu.hawaii.its.api.wrapper.FindGroupsResults;
 import edu.hawaii.its.api.wrapper.GetGroupsResults;
 import edu.hawaii.its.api.wrapper.GetMembersResults;
@@ -30,6 +29,7 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsAddMemberResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsAssignAttributesResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsAssignGrouperPrivilegesLiteResult;
 import edu.internet2.middleware.grouperClient.ws.beans.WsDeleteMemberResults;
+import edu.internet2.middleware.grouperClient.ws.beans.WsFindAttributeDefNamesResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetGroupsResults;
@@ -39,12 +39,11 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsGroupSaveResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsHasMemberResults;
 
 @Configuration
-@ActiveProfiles("ootb")
+@Profile("ootb")
 class OotbGrouperPropertyConfigurer {
 
-    private PropertyLocator propertyLocator = new PropertyLocator("src/main/resources", "data.harness.properties");
-
     public static final Log log = LogFactory.getLog(OotbGrouperPropertyConfigurer.class);
+    private PropertyLocator propertyLocator = new PropertyLocator("src/main/resources", "data.harness.properties");
 
     /*
     Data Harness Configuration
@@ -117,7 +116,8 @@ class OotbGrouperPropertyConfigurer {
     @Bean(name = "AttributeAssignmentResultsOOTBBean")
     public GroupAttributeResults grouperGroupAttributeResultsOOTB() {
         String json = propertyLocator.find("ws.get.attribute.assignment.results.success");
-        WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults = JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
+        WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
+                JsonUtil.asObject(json, WsGetAttributeAssignmentsResults.class);
         GroupAttributeResults groupAttributeResults = new GroupAttributeResults(wsGetAttributeAssignmentsResults);
         return groupAttributeResults;
     }
@@ -125,8 +125,10 @@ class OotbGrouperPropertyConfigurer {
     @Bean(name = "AssignGrouperPrivilegesResultOOTBBean")
     public AssignGrouperPrivilegesResult grouperAssignGrouperPrivilegesResultOOTB() {
         String json = propertyLocator.find("ws.assign.grouper.privileges.results.success");
-        WsAssignGrouperPrivilegesLiteResult wsAssignGrouperPrivilegesLiteResult = JsonUtil.asObject(json, WsAssignGrouperPrivilegesLiteResult.class);
-        AssignGrouperPrivilegesResult assignGrouperPrivilegesResult = new AssignGrouperPrivilegesResult(wsAssignGrouperPrivilegesLiteResult);
+        WsAssignGrouperPrivilegesLiteResult wsAssignGrouperPrivilegesLiteResult =
+                JsonUtil.asObject(json, WsAssignGrouperPrivilegesLiteResult.class);
+        AssignGrouperPrivilegesResult assignGrouperPrivilegesResult =
+                new AssignGrouperPrivilegesResult(wsAssignGrouperPrivilegesLiteResult);
         return assignGrouperPrivilegesResult;
     }
 
@@ -138,6 +140,15 @@ class OotbGrouperPropertyConfigurer {
         return getGroupsResults;
     }
 
+    @Bean(name = "FindAttributesResultsOOTBBean")
+    public FindAttributesResults grouperFindAttributesResultsOOTB() {
+        String json = propertyLocator.find("ws.attribute.def.name.results.success");
+        WsFindAttributeDefNamesResults wsFindAttributeDefNamesResults =
+                JsonUtil.asObject(json, WsFindAttributeDefNamesResults.class);
+        FindAttributesResults findAttributesResults = new FindAttributesResults(wsFindAttributeDefNamesResults);
+        return findAttributesResults;
+    }
+
     /*
     Service Configuration
      */
@@ -147,12 +158,5 @@ class OotbGrouperPropertyConfigurer {
     public GrouperService grouperApiOOTBService(OotbGroupingPropertiesService ootbGroupingPropertiesService) {
         log.debug("OOTB Grouper Api Service Started");
         return new OotbGrouperApiService(ootbGroupingPropertiesService);
-    }
-
-    @Bean(name = "grouperService")
-    @ConditionalOnProperty(name = "grouping.api.server.type", havingValue = "GROUPER", matchIfMissing = true)
-    public GrouperService grouperApiService(ExecutorService executorService) {
-        log.debug("REAL Grouper Api Service Started");
-        return new GrouperApiService(executorService);
     }
 }

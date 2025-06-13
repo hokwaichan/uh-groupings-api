@@ -1,6 +1,7 @@
 package edu.hawaii.its.api.wrapper;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +25,11 @@ public class AddMembersCommandTest {
         assertNotNull(addMembersCommand.addUhIdentifier(""));
         assertNotNull(addMembersCommand.addUhIdentifier("11111111"));
         assertNotNull(addMembersCommand.assignGroupPath(""));
+        assertNotNull(addMembersCommand.addGroupPathOwner("test-group-path"));
+        assertNotNull(addMembersCommand.addGroupPathOwners(strings));
         assertNotNull(addMembersCommand.owner(""));
         assertNotNull(addMembersCommand.includeUhMemberDetails(true));
         assertNotNull(addMembersCommand.replaceGroupMembers(true));
+        assertEquals(addMembersCommand.self(), addMembersCommand);
     }
 }

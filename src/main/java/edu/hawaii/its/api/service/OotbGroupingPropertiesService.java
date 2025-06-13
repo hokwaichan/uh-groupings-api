@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,20 +16,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import edu.hawaii.its.api.type.GroupType;
 import edu.hawaii.its.api.type.OotbActiveProfile;
 import edu.hawaii.its.api.type.OotbActiveProfileResult;
-import edu.hawaii.its.api.type.OptType;
+import edu.hawaii.its.api.type.OotbGrouping;
+import edu.hawaii.its.api.type.OotbMember;
 import edu.hawaii.its.api.wrapper.AddMemberResult;
 import edu.hawaii.its.api.wrapper.AddMembersResults;
 import edu.hawaii.its.api.wrapper.AssignAttributesResults;
+import edu.hawaii.its.api.wrapper.FindAttributesResults;
 import edu.hawaii.its.api.wrapper.FindGroupsResults;
 import edu.hawaii.its.api.wrapper.GetGroupsResults;
 import edu.hawaii.its.api.wrapper.GetMembersResult;
 import edu.hawaii.its.api.wrapper.GetMembersResults;
-import edu.hawaii.its.api.wrapper.Group;
 import edu.hawaii.its.api.wrapper.GroupAttributeResults;
 import edu.hawaii.its.api.wrapper.GroupSaveResults;
 import edu.hawaii.its.api.wrapper.HasMembersResults;
@@ -38,6 +40,7 @@ import edu.hawaii.its.api.wrapper.Subject;
 import edu.hawaii.its.api.wrapper.SubjectsResults;
 
 import edu.internet2.middleware.grouperClient.ws.beans.WsAttributeAssign;
+import edu.internet2.middleware.grouperClient.ws.beans.WsAttributeDefName;
 import edu.internet2.middleware.grouperClient.ws.beans.WsFindGroupsResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetAttributeAssignmentsResults;
 import edu.internet2.middleware.grouperClient.ws.beans.WsGetGroupsResult;
@@ -52,45 +55,47 @@ import edu.internet2.middleware.grouperClient.ws.beans.WsResultMeta;
 import edu.internet2.middleware.grouperClient.ws.beans.WsSubject;
 
 @Service
+@Profile("ootb")
 public class OotbGroupingPropertiesService {
 
     private static final Log logger = LogFactory.getLog(OotbGroupingPropertiesService.class);
-
-    @Value("${groupings.api.ootb.groupings_users}")
-    private String GROUPING_OOTBS;
-
-    @Value("${groupings.api.grouping_admins}")
-    private String GROUPING_ADMINS;
-
     @Qualifier("HasMembersResultsOOTBBean")
     private final HasMembersResults hasMembersResults;
-
     @Qualifier("FindGroupsResultsOOTBBean")
     private final FindGroupsResults findGroupsResults;
-
     @Qualifier("GetSubjectsResultsOOTBBean")
     private final SubjectsResults subjectsResults;
-
     @Qualifier("GroupSaveResultsOOTBBean")
     private final GroupSaveResults groupSaveResults;
-
     @Qualifier("AssignAttributesOOTBBean")
     private final AssignAttributesResults assignAttributesResults;
-
     @Qualifier("GetMembersResultsOOTBBean")
     private final GetMembersResults getMembersResults;
-
     @Qualifier("AddMemberResultsOOTBBean")
     private final AddMembersResults addMembersResults;
-
     @Qualifier("RemoveMembersResultsOOTBBean")
     private final RemoveMembersResults removeMembersResults;
-
     @Qualifier("AttributeAssignmentResultsOOTBBean")
     private final GroupAttributeResults groupAttributeResults;
-
     @Qualifier("GetGroupsResultsOOTBBean")
     private final GetGroupsResults getGroupsResults;
+    @Qualifier("FindAttributesResultsOOTBBean")
+    private final FindAttributesResults findAttributesResults;
+    private final Set<String> ootbActiveProfileUids = new HashSet<>();
+    @Value("${groupings.api.ootb.groupings_users}")
+    private String GROUPING_OOTBS;
+    @Value("${groupings.api.grouping_admins}")
+    private String GROUPING_ADMINS;
+    @Value("${groupings.api.operation_assign_attribute}")
+    private String OPERATION_ASSIGN_ATTRIBUTE;
+    @Value("${groupings.api.operation_remove_attribute}")
+    private String OPERATION_REMOVE_ATTRIBUTE;
+    @Value("${groupings.api.opt_in}")
+    private String OPT_IN;
+    @Value("${groupings.api.opt_out}")
+    private String OPT_OUT;
+    private String currentUser;
+    private List<OotbGrouping> groupings;
 
     public OotbGroupingPropertiesService(HasMembersResults hasMembersResults,
             FindGroupsResults findGroupsResults,
@@ -101,7 +106,8 @@ public class OotbGroupingPropertiesService {
             AddMembersResults addMembersResults,
             RemoveMembersResults removeMembersResults,
             GroupAttributeResults groupAttributeResults,
-            GetGroupsResults getGroupsResults) {
+            GetGroupsResults getGroupsResults,
+            FindAttributesResults findAttributesResults) {
         this.hasMembersResults = hasMembersResults;
         this.findGroupsResults = findGroupsResults;
         this.subjectsResults = subjectsResults;
@@ -112,6 +118,7 @@ public class OotbGroupingPropertiesService {
         this.removeMembersResults = removeMembersResults;
         this.groupAttributeResults = groupAttributeResults;
         this.getGroupsResults = getGroupsResults;
+        this.findAttributesResults = findAttributesResults;
     }
 
     public HasMembersResults getHasMembersResults() {
@@ -154,56 +161,62 @@ public class OotbGroupingPropertiesService {
         return getGroupsResults;
     }
 
+    public FindAttributesResults getFindAttributesResults() {
+        return findAttributesResults;
+    }
+
+    public String getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(String currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    public List<OotbGrouping> getGroupings() {
+        return groupings;
+    }
+
+    public void setGroupings(List<OotbGrouping> groupings) {
+        this.groupings = groupings;
+    }
+
     // Update active user profile with the values from ui request
-    public OotbActiveProfileResult updateActiveUserProfile(List<String> authorities, String uid, String uhUuid,
-            String name, String givenName) {
 
-        WsSubject activeProfileSubject = new WsSubject();
-        activeProfileSubject.setId(uhUuid);
-        activeProfileSubject.setName(givenName);
-        activeProfileSubject.setIdentifierLookup(uid);
-        activeProfileSubject.setAttributeValues(
-                new String[] { uid, "", "LAST NAME", "FIRST NAME" });
-        activeProfileSubject.setSuccess("T");
-        activeProfileSubject.setResultCode("SUCCESS");
-        activeProfileSubject.setSourceId("UH core LDAP");
+    public OotbActiveProfileResult updateActiveUserProfile(OotbActiveProfile ootbActiveProfile) {
+        // Check the ootb active profile uid that logged in before for caching
+        if (ootbActiveProfileUids.contains(ootbActiveProfile.getUid())) {
+            setCurrentUser(ootbActiveProfile.getUid());
 
-        // 1. Update Active User Profile In GROUPING_OOTBS group path
-        WsGetMembersResult[] updatedWsGetMembers = Arrays.stream(wsGetMembersResultsList())
-                .map(wsGetMembersResult -> {
-                    if (wsGetMembersResult.getWsGroup().getName().equals(GROUPING_OOTBS)) {
-                        List<WsSubject> subjectsList =
-                                new ArrayList<>(Arrays.asList(wsGetMembersResult.getWsSubjects()));
+            return new OotbActiveProfileResult(new OotbActiveProfile());
+        }
 
-                        // Check for duplicate
-                        boolean isDuplicate = subjectsList.stream()
-                                .anyMatch(subject -> subject.getIdentifierLookup()
-                                        .equals(uid));
+        ootbActiveProfileUids.add(ootbActiveProfile.getUid());
 
-                        // If no duplicate, add new subject
-                        if (!isDuplicate) {
-                            subjectsList.add(activeProfileSubject);
-                        }
+        setGroupings(ootbActiveProfile.getGroupings());
+        WsSubject activeProfileSubject = getWsSubject(ootbActiveProfile);
+        WsGroup[] wsGroups = getWsGroups(getGroupings());
+        List<WsGroup> newGroupsList = getGroups(getGroupings());
 
-                        wsGetMembersResult.setWsSubjects(subjectsList.toArray(new WsSubject[0]));
-                    }
-                    return wsGetMembersResult;
-                })
-                .toArray(WsGetMembersResult[]::new);
+        setCurrentUser(activeProfileSubject.getIdentifierLookup());
 
-        getMembersResults.getWsGetMembersResults().setResults(updatedWsGetMembers);
+        // 1. Update Active User Profile In FindGroupsResults Bean
+        WsFindGroupsResults wsFindGroupsResults = getFindGroupsResults().getWsFindGroupsResults();
 
-        // 2. Update Active User Profile In GetGroupsResults Bean
-        WsGetGroupsResult[] results = getGroupsResults.getWsGetGroupsResults().getResults();
+        // Group path without extension for FindGroupsResults here
+        List<WsGroup> existingGroups = Arrays.asList(wsFindGroupsResults.getGroupResults());
+        List<String> existingGroupNames = existingGroups.stream().map(WsGroup::getName).toList();
 
-        Arrays.stream(results)
-                .filter(result -> result.getWsSubject().getAttributeValues()[0].equals(name))
-                .findFirst()
-                .ifPresent(result -> {
-                    result.setWsSubject(activeProfileSubject);
-                });
+        List<WsGroup> combinedGroups = new ArrayList<>(existingGroups);
+        newGroupsList.stream()
+                .filter(group -> !existingGroupNames.contains(group.getName()))
+                .forEach(combinedGroups::add);
 
-        // 3. Update Active User Profile In HasMembersResults Bean
+        // Update the existing WsFindGroupsResults with the combined group list
+        wsFindGroupsResults.setGroupResults(combinedGroups.toArray(new WsGroup[0]));
+        Arrays.stream(wsGroups).toList().forEach(c -> updateDescription(c.getName(), c.getDescription()));
+
+        // 2. Update Active User Profile In HasMembersResults Bean
         HasMembersResults hasMembersResults = getHasMembersResults();
         WsHasMemberResults wsHasMemberResults = hasMembersResults.getWsHasMemberResults();
 
@@ -228,13 +241,13 @@ public class OotbGroupingPropertiesService {
         wsHasMemberResults.setWsGroup(group);
         wsHasMemberResults.setResults(resultList.toArray(new WsHasMemberResult[0]));
 
-        // 4. Add Active User Profile To Subject List Without Duplicate
+        // 3. Add Active User Profiles To Subject List Without Duplicate
         WsGetSubjectsResults wsGetSubjectsResults = getSubjectsResults().getWsGetSubjectsResults();
         WsSubject[] currentSubjects = wsGetSubjectsResults.getWsSubjects();
 
         // Check if there is already a subject with the same UID
         boolean isDuplicate = Arrays.stream(currentSubjects)
-                .anyMatch(subject -> subject.getIdentifierLookup().equals(uid));
+                .anyMatch(subject -> subject.getIdentifierLookup().equals(activeProfileSubject.getIdentifierLookup()));
 
         // If no duplicate, add new subject
         if (!isDuplicate) {
@@ -243,149 +256,88 @@ public class OotbGroupingPropertiesService {
             wsGetSubjectsResults.setWsSubjects(updatedSubjects);
         }
 
-        // 5. Add Active User Profile To Members List Without Duplicate
-        // Add default user to default users' owned group
-        GetGroupsResults getGroupsResults = getGroups(uid);
-        getGroupsResults.getGroups().stream()
-                .map(Group::getGroupPath)
-                .forEach(groupPath -> addMember("Default User", groupPath, uid));
+        // 4. Add Active User Profile To Members List Without Duplicate
+        // Add group for 4 different extension (basis, include, exclude, owners)
+        newGroupsList.forEach(newGroup -> {
+            addNewGroupMemberResult(newGroup, "basis");
+            addNewGroupMemberResult(newGroup, "include");
+            addNewGroupMemberResult(newGroup, "exclude");
+            addNewGroupMemberResult(newGroup, "owners");
+        });
 
-        // Add default user to admin member list if default user has admin role
-        if (authorities.contains("ROLE_ADMIN")) {
-            addMember("Default User", GROUPING_ADMINS, uid);
+        // 5. Add all members in multiple groupPaths
+        groupings.forEach(
+                grouping -> {
+                    addMember(grouping.getName(), Collections.singletonList(activeProfileSubject));
+                    addMember(grouping.getName(), convertOotbMemberListToWsSubject(grouping.getMembers()));
+
+                    addMember(GROUPING_OOTBS, Collections.singletonList(activeProfileSubject));
+                    addMember(GROUPING_OOTBS, convertOotbMemberListToWsSubject(grouping.getMembers()));
+
+                    manageAttributeAssignment(activeProfileSubject.getIdentifierLookup(), grouping.getName(), OPT_IN,
+                            OPERATION_ASSIGN_ATTRIBUTE);
+                    if (PathFilter.extractExtension(grouping.getName()).equals("include")
+                            || PathFilter.extractExtension(grouping.getName()).equals("basis")) {
+                        manageAttributeAssignment(activeProfileSubject.getIdentifierLookup(), grouping.getName(),
+                                OPT_OUT, OPERATION_ASSIGN_ATTRIBUTE);
+                    }
+                }
+        );
+
+        // Add default user into admin member list if default user has admin role
+        if (ootbActiveProfile.getAuthorities().contains("ROLE_ADMIN")) {
+            addMember(GROUPING_ADMINS, Collections.singletonList(activeProfileSubject));
         }
 
-
-        OotbActiveProfile profile = new OotbActiveProfile.Builder()
-            .uid(uid)
-            .uhUuid(uhUuid)
-            .name(name)
-            .givenName(givenName)
-            .authorities(authorities)
-            .build();
-
-        return new OotbActiveProfileResult(profile);
+        return new OotbActiveProfileResult(ootbActiveProfile);
     }
 
     /* Updating Member(s) */
-
-    public void ootbRemoveMember(String currentUser, String groupPath, String uhIdentifier) {
-
-        /* Update member information */
-        updateMemberRemoved(groupPath, Collections.singletonList(uhIdentifier));
-
-        /* Update getGroupResults for updating managePerson  */
-        updateGetGroupsResults(uhIdentifier, groupPath, "remove");
-    }
-
-    public void ootbRemoveMembers(String currentUser, String groupPath, List<String> uhIdentifiers) {
+    public void ootbRemoveMembers(String groupPath, List<WsSubject> wsSubjectList) {
 
         /* Update member information */
-        updateMemberRemoved(groupPath, uhIdentifiers);
+        updateMemberRemoved(groupPath, wsSubjectList);
 
         /* Update getGroupResults for updating managePerson  */
-        updateGetGroupsResults(uhIdentifiers, groupPath, "remove");
+        wsSubjectList.forEach(wsSubject -> updateGetGroupsResults(wsSubject, groupPath, "remove"));
     }
 
-    public void ootbAddMember(String currentUser, String groupPath, String uhIdentifier) {
+    private void ootbAddMembers(String groupPath, List<WsSubject> wsSubjectList) {
+        String groupName = PathFilter.parentGroupingPath(groupPath);
+        String extension = PathFilter.extractExtension(groupPath);
 
-        /* Self opt-in, opt-out */
-        if (currentUser.equals(uhIdentifier)) {
-            if (groupPath.endsWith(GroupType.INCLUDE.value())) {
-                optIn(groupPath);
-            } else {
-                optOut(groupPath);
+        // update getMembersResults
+        updateMemberAdded(groupPath, wsSubjectList);
+        // update getGroupsResults
+        wsSubjectList.forEach(wsSubject -> {
+            if (extension.equals("include") || extension.equals("basis")) {
+                updateGetGroupsResults(wsSubject, groupPath, "add");
+
+                if (extension.equals("include")) {
+                    updateGetGroupsResults(wsSubject, groupName + ":exclude",
+                            "remove");
+                    updateMemberRemoved(groupName + ":exclude", Collections.singletonList(wsSubject));
+                }
+
+                manageAttributeAssignment(wsSubject.getIdentifierLookup(), groupPath, OPT_OUT,
+                        OPERATION_ASSIGN_ATTRIBUTE);
+                manageAttributeAssignment(wsSubject.getIdentifierLookup(), groupPath, OPT_IN,
+                        OPERATION_REMOVE_ATTRIBUTE);
+                return;
             }
-            return;
-        }
 
-        /* Map< uhIdentifier, Subject> for list of users can be added in ootb groupings page. */
-        Map<String, Subject> getValidOotbUsers = getValidOotbUsers(Collections.singletonList(uhIdentifier));
-
-        /* Update member information */
-        updateMemberAdded(groupPath, Collections.singletonList(uhIdentifier), getValidOotbUsers);
-
-        /* Update getGroupResults for updating managePerson  */
-        if (!currentUser.equals("Default User")) {
-            updateGetGroupsResults(uhIdentifier, groupPath, "add");
-        }
-
-    }
-
-    public void ootbAddMembers(String currentUser, String groupPath, List<String> uhIdentifiers) {
-
-        /* Map< uhIdentifier, Suibject> for list of users can be added in ootb groupings page. */
-        Map<String, Subject> getValidOotbUsers = getValidOotbUsers(uhIdentifiers);
-
-        /* Update member information */
-        updateMemberAdded(groupPath, uhIdentifiers, getValidOotbUsers);
-
-        /* Update getGroupResults for updating managePerson  */
-        updateGetGroupsResults(uhIdentifiers, groupPath, "add");
-    }
-
-    public void addSelf(String currentUser, String groupPath, String uhIdentifier) {
-        WsGetMembersResult[] updatedWsGetMembers = Arrays.stream(wsGetMembersResultsList())
-                .map(wsGetMembersResult -> {
-                    if (wsGetMembersResult.getWsGroup() != null && groupPath.equals(
-                            wsGetMembersResult.getWsGroup().getName())) {
-                        List<WsSubject> updatedSubjectsList =
-                                new ArrayList<>(Arrays.asList(wsGetMembersResult.getWsSubjects()));
-                        WsSubject newMember = new WsSubject();
-                        List<String> attributes = List.of(uhIdentifier, uhIdentifier);
-                        newMember.setId(uhIdentifier);
-                        newMember.setName(uhIdentifier);
-                        newMember.setAttributeValues(attributes.toArray(new String[0]));
-                        newMember.setSuccess("T");
-                        newMember.setResultCode("SUCCESS");
-                        newMember.setSourceId("UH core LDAP");
-                        updatedSubjectsList.add(newMember);
-                        wsGetMembersResult.setWsSubjects(updatedSubjectsList.toArray(new WsSubject[0]));
-                    }
-                    return wsGetMembersResult;
-                })
-                .toArray(WsGetMembersResult[]::new);
-        getMembersResults.getWsGetMembersResults().setResults(updatedWsGetMembers);
-    }
-
-    private void optIn(String groupPath) {
-
-        /* Change attribute can opt-in to can opt-out */
-        changeAttribute(groupPath, OptType.IN, OptType.OUT);
-
-        /* Add the group with specific groupPath in GetGroupsResults */
-        WsGetGroupsResults wsGetGroupsResults = getGroupsResults.getWsGetGroupsResults();
-        String groupName = PathFilter.parentGroupingPath(groupPath);
-
-        WsGroup newGroup = new WsGroup();
-        newGroup.setName(groupName + ":include");
-        newGroup.setDisplayName(groupName + ":include");
-        newGroup.setExtension("include");
-        newGroup.setDisplayExtension("include");
-        newGroup.setTypeOfGroup("group");
-
-        Arrays.stream(wsGetGroupsResults.getResults()).forEach(result -> {
-            List<WsGroup> groupList = new ArrayList<>(Arrays.asList(result.getWsGroups()));
-            groupList.add(newGroup); // Add the new group with name matching groupPath
-            result.setWsGroups(
-                    groupList.toArray(new WsGroup[0]));
-        });
-    }
-
-    private void optOut(String groupPath) {
-
-        /* Change attribute can opt out to can opt in */
-        changeAttribute(groupPath, OptType.OUT, OptType.IN);
-
-        /* Remove a Group with specific groupPaths from GetGroupsResults */
-        WsGetGroupsResults wsGetGroupsResults = getGroupsResults.getWsGetGroupsResults();
-        String groupName = PathFilter.parentGroupingPath(groupPath);
-
-        Arrays.stream(wsGetGroupsResults.getResults()).forEach(result -> {
-            WsGroup[] filteredGroups = Arrays.stream(result.getWsGroups())
-                    .filter(group -> !group.getName().equals(groupName + ":include"))
-                    .toArray(WsGroup[]::new);
-            result.setWsGroups(filteredGroups);
+            if (extension.equals("exclude")) {
+                updateGetGroupsResults(wsSubject, groupPath, "add");
+                updateGetGroupsResults(wsSubject, groupName + ":include",
+                        "remove");
+                updateMemberRemoved(groupName + ":include", Collections.singletonList(wsSubject));
+                manageAttributeAssignment(wsSubject.getIdentifierLookup(), groupPath, OPT_IN,
+                        OPERATION_ASSIGN_ATTRIBUTE);
+                manageAttributeAssignment(wsSubject.getIdentifierLookup(), groupPath, OPT_OUT,
+                        OPERATION_REMOVE_ATTRIBUTE);
+                return;
+            }
+            updateGetGroupsResults(wsSubject, groupPath, "add");
         });
     }
 
@@ -472,29 +424,40 @@ public class OotbGroupingPropertiesService {
         getMembersResults.getWsGetMembersResults().setResults(updatedWsGetMembersResults);
     }
 
-
-
-
     /* Query Function */
 
     public AddMemberResult addMember(String currentUser, String groupPath, String uhIdentifier) {
-        ootbAddMember(currentUser, groupPath, uhIdentifier);
+        WsSubject wsSubject = getWsOotbSubject(uhIdentifier);
+        ootbAddMembers(groupPath, Collections.singletonList(wsSubject));
         return getAddMembersResults().getResults().get(0);
     }
 
     public AddMembersResults addMembers(String currentUser, String groupPath, List<String> uhIdentifiers) {
-        ootbAddMembers(currentUser, groupPath, uhIdentifiers);
+        List<WsSubject> wsSubjectList = getWsOotbSubjects(uhIdentifiers);
+        ootbAddMembers(groupPath, wsSubjectList);
         return getAddMembersResults();
     }
 
+    public AddMemberResult addMember(String groupPath, List<WsSubject> subjects) {
+        ootbAddMembers(groupPath, subjects);
+        return getAddMembersResults().getResults().get(0);
+    }
+
     public RemoveMemberResult removeMember(String currentUser, String groupPath, String uhIdentifier) {
-        ootbRemoveMember(currentUser, groupPath, uhIdentifier);
+        WsSubject wsSubject = getWsOotbSubject(uhIdentifier);
+        ootbRemoveMembers(groupPath, Collections.singletonList(wsSubject));
         return getRemoveMembersResults().getResults().get(0);
     }
 
     public RemoveMembersResults removeMembers(String currentUser, String groupPath, List<String> uhIdentifiers) {
-        ootbRemoveMembers(currentUser, groupPath, uhIdentifiers);
+        List<WsSubject> wsSubject = getWsOotbSubjects(uhIdentifiers);
+        ootbRemoveMembers(groupPath, wsSubject);
         return getRemoveMembersResults();
+    }
+
+    public RemoveMemberResult removeMember(String groupPath, List<WsSubject> subjects) {
+        ootbRemoveMembers(groupPath, subjects);
+        return getRemoveMembersResults().getResults().get(0);
     }
 
     public SubjectsResults getSubject(String uhIdentifier) {
@@ -529,7 +492,9 @@ public class OotbGroupingPropertiesService {
         WsAttributeAssign[] currentAssigns = wsGetAttributeAssignmentsResults.getWsAttributeAssigns();
 
         List<WsAttributeAssign> filteredAssigns = Arrays.stream(currentAssigns)
-                .filter(assign -> attribute.equals(assign.getAttributeDefNameName()))
+                .filter(assign -> attribute.equals(assign.getAttributeDefNameName()) && (
+                        assign.getOwnerMemberSubjectId() == null || assign.getOwnerMemberSubjectId()
+                                .equals(getCurrentUser())))
                 .toList();
 
         WsGetAttributeAssignmentsResults modifiedResults = new WsGetAttributeAssignmentsResults();
@@ -550,16 +515,43 @@ public class OotbGroupingPropertiesService {
         WsAttributeAssign[] currentAssigns = wsGetAttributeAssignmentsResults.getWsAttributeAssigns();
 
         List<WsAttributeAssign> filteredAssigns = Arrays.stream(currentAssigns)
-                .filter(assign -> attribute.equals(assign.getAttributeDefNameName()) && groupPaths.contains(
-                        assign.getOwnerGroupName()))
+                .filter(assign -> attribute.equals(assign.getAttributeDefNameName()) &&
+                        groupPaths.contains(assign.getOwnerGroupName()) &&
+                        (currentUser == null || currentUser.equals(assign.getOwnerMemberSubjectId())))
                 .toList();
 
         WsGetAttributeAssignmentsResults modifiedResults = new WsGetAttributeAssignmentsResults();
-
         modifiedResults.setWsAttributeDefs(wsGetAttributeAssignmentsResults.getWsAttributeDefs());
         modifiedResults.setWsAttributeDefNames(wsGetAttributeAssignmentsResults.getWsAttributeDefNames());
         modifiedResults.setWsGroups(wsGetAttributeAssignmentsResults.getWsGroups());
         modifiedResults.setWsAttributeAssigns(filteredAssigns.toArray(new WsAttributeAssign[0]));
+
+        return new GroupAttributeResults(modifiedResults);
+    }
+
+    public GroupAttributeResults getGroupAttributeResults(String currentUser,
+            String groupPath) {
+        WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
+                getGroupAttributeResults().getWsGetAttributeAssignmentsResults();
+
+        WsAttributeAssign[] currentAssigns = wsGetAttributeAssignmentsResults.getWsAttributeAssigns();
+        WsAttributeDefName[] wsAttributeDefNames = wsGetAttributeAssignmentsResults.getWsAttributeDefNames();
+
+        List<WsAttributeAssign> filteredAssigns = Arrays.stream(currentAssigns)
+                .filter(assign ->
+                        groupPath.equals(assign.getOwnerGroupName()) &&
+                                (currentUser == null || currentUser.equals(assign.getOwnerMemberSubjectId())))
+                .toList();
+
+        List<WsAttributeDefName> filteredDefName = Arrays.stream(wsAttributeDefNames)
+                .filter(defName -> defName.getUuid().equals(groupPath))
+                .toList();
+
+        WsGetAttributeAssignmentsResults modifiedResults = new WsGetAttributeAssignmentsResults();
+        modifiedResults.setWsAttributeDefs(wsGetAttributeAssignmentsResults.getWsAttributeDefs());
+        modifiedResults.setWsGroups(wsGetAttributeAssignmentsResults.getWsGroups());
+        modifiedResults.setWsAttributeAssigns(filteredAssigns.toArray(new WsAttributeAssign[0]));
+        modifiedResults.setWsAttributeDefNames(filteredDefName.toArray(new WsAttributeDefName[0]));
 
         return new GroupAttributeResults(modifiedResults);
     }
@@ -571,8 +563,7 @@ public class OotbGroupingPropertiesService {
             return getGroupsResults();
         }
 
-        GetGroupsResults getGroupsResults1 = getGroupsResults;
-        WsGetGroupsResults wsGetGroupsResults = getGroupsResults1.getWsGetGroupsResults();
+        WsGetGroupsResults wsGetGroupsResults = getGroupsResults.getWsGetGroupsResults();
 
         WsGetGroupsResult[] filteredResults = Arrays.stream(wsGetGroupsResults.getResults())
                 .filter(result -> {
@@ -624,17 +615,176 @@ public class OotbGroupingPropertiesService {
         return new FindGroupsResults(newWsFindGroupsResults);
     }
 
+    public GroupSaveResults updateDescription(String groupPath, String description) {
+        WsFindGroupsResults wsFindGroupsResults = getFindGroupsResults().getWsFindGroupsResults();
+        WsGroup[] groups = wsFindGroupsResults.getGroupResults();
 
+        if (groups.length == 0) {
+            return new GroupSaveResults();
+        }
 
+        Arrays.stream(groups)
+                .filter(group -> group.getName() != null && group.getName().equals(groupPath))
+                .findFirst()
+                .ifPresent(group -> group.setDescription(description));
 
+        return getGroupSaveResults();
+    }
+
+    private void updateMemberAdded(String groupPath, List<WsSubject> wsSubjects) {
+        if (wsSubjects.isEmpty()) {
+            return;
+        }
+
+        WsGetMembersResult[] updatedWsGetMembers = Arrays.stream(wsGetMembersResultsList())
+                .map(wsGetMembersResult -> {
+                    if (wsGetMembersResult.getWsGroup() != null && groupPath.equals(
+                            wsGetMembersResult.getWsGroup().getName())) {
+                        List<WsSubject> existingSubjectsList =
+                                new ArrayList<>(Arrays.asList(wsGetMembersResult.getWsSubjects()));
+                        List<WsSubject> newSubjects = wsSubjects.stream()
+                                .filter(newSubject -> existingSubjectsList.stream()
+                                        .noneMatch(existingSubject -> existingSubject.getIdentifierLookup()
+                                                .equals(newSubject.getIdentifierLookup())))
+                                .toList();
+
+                        existingSubjectsList.addAll(newSubjects);
+                        wsGetMembersResult.setWsSubjects(existingSubjectsList.toArray(new WsSubject[0]));
+                    }
+                    return wsGetMembersResult;
+                })
+                .toArray(WsGetMembersResult[]::new);
+
+        getMembersResults().getWsGetMembersResults().setResults(updatedWsGetMembers);
+    }
+
+    public AssignAttributesResults manageAttributeAssignment(String currentUser, String groupPath, String attributeName,
+            String assignOperation) {
+        String groupName = PathFilter.parentGroupingPath(groupPath);
+
+        Set<String> membersUid = Stream.concat(
+                Stream.concat(
+                        getMembersOfMembership(groupName + ":include").stream(),
+                        getMembersOfMembership(groupName + ":exclude").stream()
+                ),
+                Stream.concat(
+                        getMembersOfMembership(groupName + ":basis").stream(),
+                        getMembersOfMembership(groupName + ":owner").stream()
+                )
+        ).collect(Collectors.toSet());
+
+        WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
+                getGroupAttributeResults().getWsGetAttributeAssignmentsResults();
+        List<WsAttributeAssign> attributeAssigns =
+                new ArrayList<>(Arrays.asList(wsGetAttributeAssignmentsResults.getWsAttributeAssigns()));
+        List<WsAttributeDefName> attributeDefNames =
+                new ArrayList<>(Arrays.asList(wsGetAttributeAssignmentsResults.getWsAttributeDefNames()));
+        List<WsGroup> wsGroupsList =
+                new ArrayList<>(Arrays.asList(wsGetAttributeAssignmentsResults.getWsGroups()));
+        List<WsGroup> wsGroups = new ArrayList<>();
+        if (getGroupings() != null && !getGroupings().isEmpty()) {
+            wsGroups = getGroups(getGroupings());
+        }
+        if (assignOperation.equals("assign_attr")) {
+            WsAttributeAssign newAssign = new WsAttributeAssign();
+
+            newAssign.setOwnerGroupName(groupName);
+            newAssign.setAttributeDefNameName(attributeName);
+            newAssign.setOwnerMemberSubjectId(currentUser);
+
+            boolean isDuplicateAssign = attributeAssigns.stream().anyMatch(wsAttributeAssign ->
+                    wsAttributeAssign.getOwnerGroupName().equals(newAssign.getOwnerGroupName()) &&
+                            wsAttributeAssign.getAttributeDefNameName()
+                                    .equals(newAssign.getAttributeDefNameName())
+                            &&
+                            wsAttributeAssign.getOwnerMemberSubjectId()
+                                    .equals(newAssign.getOwnerMemberSubjectId()));
+
+            if (!isDuplicateAssign) {
+                attributeAssigns.add(newAssign);
+            }
+
+            membersUid.forEach(uid -> {
+                boolean isDuplicateDefName = attributeDefNames.stream().anyMatch(defName ->
+                        defName.getName().equals(attributeName) &&
+                                defName.getUuid().equals(groupName));
+
+                if (!isDuplicateDefName) {
+                    WsAttributeDefName wsAttributeDefName = new WsAttributeDefName();
+                    wsAttributeDefName.setIdIndex(uid);
+                    wsAttributeDefName.setUuid(groupName);
+                    wsAttributeDefName.setName(attributeName);
+                    wsAttributeDefName.setDisplayName(attributeName);
+                    wsAttributeDefName.setAttributeDefName(attributeName);
+                    attributeDefNames.add(wsAttributeDefName);
+                }
+            });
+
+            // Check if groupName already exists in wsGroupsList before adding
+            boolean isGroupPresent = wsGroupsList.stream().anyMatch(wsGroup -> wsGroup.getName().equals(groupName));
+            if (!isGroupPresent) {
+                Optional<WsGroup> matchingGroup = wsGroups.stream()
+                        .filter(wsGroup -> wsGroup.getName().equals(groupName))
+                        .findFirst();
+                matchingGroup.ifPresent(wsGroupsList::add);
+            }
+        }
+
+        if (assignOperation.equals("remove_attr")) {
+            membersUid.forEach(uid -> {
+                attributeAssigns.removeIf(wsAttributeAssign ->
+                        hasAttributeAssign(wsAttributeAssign, groupName, attributeName, currentUser));
+
+                attributeDefNames.removeIf(defName ->
+                        defName.getUuid().equals(groupName) && defName.getIdIndex().equals(currentUser) &&
+                                defName.getName().equals(attributeName));
+            });
+        }
+
+        wsGetAttributeAssignmentsResults.setWsAttributeDefNames(attributeDefNames.toArray(new WsAttributeDefName[0]));
+        wsGetAttributeAssignmentsResults.setWsAttributeAssigns(attributeAssigns.toArray(new WsAttributeAssign[0]));
+        wsGetAttributeAssignmentsResults.setWsGroups(wsGroupsList.toArray(new WsGroup[0]));
+        return getAssignAttributesResults();
+    }
+
+    public HasMembersResults getHasMembers(String groupPath, String uhIdentifier) {
+        HasMembersResults hasMembersResults = getHasMembersResults();
+        WsHasMemberResults wsHasMemberResults = hasMembersResults.getWsHasMemberResults();
+        WsHasMemberResult[] wsHasMemberResults1 = wsHasMemberResults.getResults();
+        WsResultMeta wsResultMeta = new WsResultMeta();
+
+        if (groupPath.equals(GROUPING_ADMINS)) {
+            wsResultMeta.setResultCode("IS_MEMBER");
+            wsHasMemberResults1[0].setResultMetadata(wsResultMeta);
+            wsHasMemberResults.setResults(new WsHasMemberResult[] { wsHasMemberResults1[0] });
+            return hasMembersResults;
+        }
+
+        WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
+                getGroupAttributeResults().getWsGetAttributeAssignmentsResults();
+        List<WsAttributeAssign> attributeAssigns =
+                new ArrayList<>(Arrays.asList(wsGetAttributeAssignmentsResults.getWsAttributeAssigns()));
+        boolean hasAttributeAssign = attributeAssigns.stream()
+                .anyMatch(attributeAssign ->
+                        hasAttributeAssign(attributeAssign, PathFilter.parentGroupingPath(groupPath), OPT_OUT,
+                                uhIdentifier));
+
+        if (!hasAttributeAssign) {
+            wsResultMeta.setResultCode("IS_NOT_MEMBER");
+        } else {
+            wsResultMeta.setResultCode("IS_MEMBER");
+        }
+        wsHasMemberResults1[0].setResultMetadata(wsResultMeta);
+        wsHasMemberResults.setResults(new WsHasMemberResult[] { wsHasMemberResults1[0] });
+        return hasMembersResults;
+    }
 
 
     /* Util Function */
 
     public WsGetMembersResult[] wsGetMembersResultsList() {
         WsGetMembersResults wsGetMembersResults = getMembersResults().getWsGetMembersResults();
-        WsGetMembersResult[] wsGetMembers = wsGetMembersResults.getResults();
-        return wsGetMembers;
+        return wsGetMembersResults.getResults();
     }
 
     public GetMembersResult getMembersByGroupPath(String groupPath) {
@@ -646,8 +796,25 @@ public class OotbGroupingPropertiesService {
 
     public WsSubject[] getWsSubjectListOfOotbUsers() {
         GetMembersResult getMembersResult = getMembersByGroupPath(GROUPING_OOTBS);
+        return getMembersResult.getWsGetMembersResult().getWsSubjects();
+    }
+
+    public WsSubject getWsOotbSubject(String uhIdentifier) {
+        GetMembersResult getMembersResult = getMembersByGroupPath(GROUPING_OOTBS);
         WsSubject[] wsSubjects = getMembersResult.getWsGetMembersResult().getWsSubjects();
-        return wsSubjects;
+        Optional<WsSubject> subject = Arrays.stream(wsSubjects)
+                .filter(wsSubject -> wsSubject.getIdentifierLookup().equals(uhIdentifier))
+                .findFirst();
+        return subject.orElse(null);
+    }
+
+    public List<WsSubject> getWsOotbSubjects(List<String> uhIdentifiers) {
+        GetMembersResult getMembersResult = getMembersByGroupPath(GROUPING_OOTBS);
+        WsSubject[] wsSubjects = getMembersResult.getWsGetMembersResult().getWsSubjects();
+        Optional<List<WsSubject>> subject = Optional.of(
+                Arrays.stream(wsSubjects).filter(wsSubject -> uhIdentifiers.contains(wsSubject.getId()))
+                        .toList());
+        return subject.get();
     }
 
     public Boolean isValidOotbUhIdentifier(String uhIdentifier) {
@@ -683,63 +850,63 @@ public class OotbGroupingPropertiesService {
 
     public WsGroup getWsGroupFromFindGroupsResults(FindGroupsResults findGroupsResults, String filteredGroupPath) {
 
-        WsGroup wsGroup1 = Arrays.stream(findGroupsResults.getWsFindGroupsResults().getGroupResults())
+        if (findGroupsResults == null || findGroupsResults.getWsFindGroupsResults() == null ||
+                findGroupsResults.getWsFindGroupsResults().getGroupResults() == null) {
+            return null;
+        }
+
+        WsGroup[] groupResults = findGroupsResults.getWsFindGroupsResults().getGroupResults();
+        return Arrays.stream(groupResults)
                 .filter(wsGroup -> wsGroup.getName().equals(filteredGroupPath))
                 .findFirst()
                 .orElse(null);
-        return wsGroup1;
     }
 
-    private void changeAttribute(String groupPath, OptType from, OptType to) {
-
-        WsGetAttributeAssignmentsResults wsGetAttributeAssignmentsResults =
-                getGroupAttributeResults().getWsGetAttributeAssignmentsResults();
-        String groupName = PathFilter.parentGroupingPath(groupPath);
-
-        Arrays.stream(wsGetAttributeAssignmentsResults.getWsAttributeAssigns())
-                .filter(wsAttributeAssign -> groupName.equals(wsAttributeAssign.getOwnerGroupName()) &&
-                        from.value().equals(wsAttributeAssign.getAttributeDefNameName()))
-                .forEach(wsAttributeAssign -> wsAttributeAssign.setAttributeDefNameName(to.value()));
-    }
-
-    public void updateGetGroupsResults(String uhIdentifier, String groupPath, String operation) {
+    public void updateGetGroupsResults(WsSubject wsSubject, String groupPath, String operation) {
         WsGetGroupsResults wsGetGroupsResults1 = getGroupsResults().getWsGetGroupsResults();
+        WsGetGroupsResult[] wsGetGroupsResults = wsGetGroupsResults1.getResults();
+        List<WsGetGroupsResult> wsGetGroupsResultList = new ArrayList<>(Arrays.asList(wsGetGroupsResults));
+
+        String parentGroupingPath = PathFilter.parentGroupingPath(groupPath);
+        String extension = PathFilter.extractExtension(groupPath);
+        // Check if there is already a result with the same subject
+        Optional<WsGetGroupsResult> existingResult = wsGetGroupsResultList.stream()
+                .filter(result -> wsSubject.getId().equals(result.getWsSubject().getIdentifierLookup())
+                        || wsSubject.getId().equals(result.getWsSubject().getId()))
+                .findFirst();
+
+        if (existingResult.isPresent()) {
+            WsGetGroupsResult existedGroup = existingResult.get();
+            if (operation.equals("add")) {
+                WsGroup newGroup = createWsGroup(parentGroupingPath, extension);
+                WsGroup[] updatedGroups = mergeGroups(existedGroup, newGroup);
+                existedGroup.setWsGroups(updatedGroups);
+                return;
+            }
+            if (operation.equals("remove")) {
+                WsGroup[] filteredGroups = Arrays.stream(existedGroup.getWsGroups())
+                        .filter(group -> group != null && !groupPath.equals(group.getName()))
+                        .toArray(WsGroup[]::new);
+                existedGroup.setWsGroups(filteredGroups);
+                return;
+            }
+        }
 
         if (operation.equals("add")) {
-            FindGroupsResults findGroupsResults1 = getFindGroups(groupPath);
-
-            Arrays.stream(wsGetGroupsResults1.getResults())
-                    .filter(result -> uhIdentifier.equals(result.getWsSubject().getIdentifierLookup())
-                            || uhIdentifier.equals(result.getWsSubject().getId()))
-                    .forEach(result -> {
-                        WsGroup newGroup = new WsGroup();
-                        newGroup.setName(groupPath);
-                        newGroup.setDisplayName(groupPath);
-                        newGroup.setDescription(findGroupsResults1.getGroup().getDescription());
-                        newGroup.setExtension(findGroupsResults1.getGroup().getExtension());
-                        newGroup.setDisplayExtension(findGroupsResults1.getGroup().getExtension());
-                        newGroup.setTypeOfGroup("Group");
-
-                        WsGroup[] existingGroups = result.getWsGroups();
-                        WsGroup[] updatedGroups = new WsGroup[existingGroups.length + 1];
-                        updatedGroups[existingGroups.length] = newGroup;
-
-                        result.setWsGroups(updatedGroups);
-                    });
+            WsGetGroupsResult newResult = new WsGetGroupsResult();
+            newResult.setWsSubject(wsSubject);
+            WsGroup newGroup = createWsGroup(parentGroupingPath, extension);
+            newResult.setWsGroups(new WsGroup[] { newGroup });
+            wsGetGroupsResultList.add(newResult);
         }
 
         if (operation.equals("remove")) {
-            Arrays.stream(wsGetGroupsResults1.getResults())
-                    .filter(result -> uhIdentifier.equals(result.getWsSubject().getIdentifierLookup())
-                            || uhIdentifier.equals(result.getWsSubject().getId()))
-                    .forEach(result -> {
-                        WsGroup[] filteredGroups = Arrays.stream(result.getWsGroups())
-                                .filter(group -> group != null && !groupPath.equals(group.getName()))
-                                .toArray(WsGroup[]::new);
-                        result.setWsGroups(filteredGroups);
-                    });
+            return;
         }
 
+        // Update getGroupsResults
+        WsGetGroupsResult[] updatedResults = wsGetGroupsResultList.toArray(new WsGetGroupsResult[0]);
+        getGroupsResults().getWsGetGroupsResults().setResults(updatedResults);
     }
 
     public void updateGetGroupsResults(List<String> uhIdentifier, String groupPath, String operation) {
@@ -760,9 +927,7 @@ public class OotbGroupingPropertiesService {
                         newGroup.setDisplayExtension(findGroupsResults1.getGroup().getExtension());
                         newGroup.setTypeOfGroup("Group");
 
-                        WsGroup[] existingGroups = result.getWsGroups();
-                        WsGroup[] updatedGroups = new WsGroup[existingGroups.length + 1];
-                        updatedGroups[existingGroups.length] = newGroup;
+                        WsGroup[] updatedGroups = mergeGroups(result, newGroup);
 
                         result.setWsGroups(updatedGroups);
                     });
@@ -779,38 +944,35 @@ public class OotbGroupingPropertiesService {
         }
     }
 
-    private void updateMemberAdded(String groupPath, List<String> uhIdentifiers,
-            Map<String, Subject> getValidOotbUsers) {
+    private WsSubject getWsSubject(OotbActiveProfile ootbActiveProfile) {
+        WsSubject activeProfileSubject = new WsSubject();
+        activeProfileSubject.setId(ootbActiveProfile.getUhUuid());
+        activeProfileSubject.setName(ootbActiveProfile.getAttributes().get("givenName"));
+        activeProfileSubject.setIdentifierLookup(ootbActiveProfile.getUid());
+        activeProfileSubject.setAttributeValues(
+                new String[] { ootbActiveProfile.getUid(), "", "LAST NAME", "FIRST NAME" });
+        activeProfileSubject.setSuccess("T");
+        activeProfileSubject.setResultCode("SUCCESS");
+        activeProfileSubject.setSourceId("UH core LDAP");
+        return activeProfileSubject;
+    }
+
+    private void updateMemberRemoved(String groupPath, List<WsSubject> wsSubjectsToRemove) {
+        if (wsSubjectsToRemove.isEmpty())
+            return;
         WsGetMembersResult[] updatedWsGetMembers = Arrays.stream(wsGetMembersResultsList())
                 .map(wsGetMembersResult -> {
                     if (wsGetMembersResult.getWsGroup() != null && groupPath.equals(
                             wsGetMembersResult.getWsGroup().getName())) {
-                        List<WsSubject> updatedSubjectsList =
+                        List<WsSubject> currentSubjectsList =
                                 new ArrayList<>(Arrays.asList(wsGetMembersResult.getWsSubjects()));
-                        Set<String> existingIdentifiers = updatedSubjectsList.stream()
-                                .map(WsSubject::getIdentifierLookup)
-                                .collect(Collectors.toSet());
 
-                        uhIdentifiers.stream()
-                                .filter(getValidOotbUsers::containsKey)
-                                .map(getValidOotbUsers::get)
-                                .map(ootbUser -> {
-                                    WsSubject newMember = new WsSubject();
-                                    newMember.setId(ootbUser.getUhUuid());
-                                    newMember.setName(ootbUser.getName());
-                                    newMember.setIdentifierLookup(ootbUser.getUid());
-                                    newMember.setAttributeValues(
-                                            new String[] { ootbUser.getUid(), "", ootbUser.getLastName(),
-                                                    ootbUser.getFirstName() });
-                                    newMember.setSuccess("T");
-                                    newMember.setResultCode("SUCCESS");
-                                    newMember.setSourceId("UH core LDAP");
-                                    return newMember;
-                                })
-                                .filter(newMember -> !existingIdentifiers.contains(newMember.getIdentifierLookup()))
-                                .forEach(updatedSubjectsList::add);
+                        currentSubjectsList.removeIf(subjectInList ->
+                                wsSubjectsToRemove.stream()
+                                        .anyMatch(subjectToRemove -> subjectToRemove.getId()
+                                                .equals(subjectInList.getId())));
 
-                        wsGetMembersResult.setWsSubjects(updatedSubjectsList.toArray(new WsSubject[0]));
+                        wsGetMembersResult.setWsSubjects(currentSubjectsList.toArray(new WsSubject[0]));
                     }
                     return wsGetMembersResult;
                 })
@@ -819,42 +981,126 @@ public class OotbGroupingPropertiesService {
         getMembersResults.getWsGetMembersResults().setResults(updatedWsGetMembers);
     }
 
-    private void updateMemberRemoved(String groupPath, List<String> uhIdentifiers) {
-        WsGetMembersResult[] updatedWsGetMembersResults = Arrays.stream(wsGetMembersResultsList())
-                .map(wsGetMembersResult -> {
-                    if (wsGetMembersResult.getWsGroup() != null && groupPath.equals(
-                            wsGetMembersResult.getWsGroup().getName())) {
-                        WsGetMembersResult filteredResult = new WsGetMembersResult();
-                        filteredResult.setWsGroup(wsGetMembersResult.getWsGroup());
-                        filteredResult.setResultMetadata(wsGetMembersResult.getResultMetadata());
-                        WsSubject[] filteredSubjects = Arrays.stream(wsGetMembersResult.getWsSubjects())
-                                .filter(wsSubject -> !uhIdentifiers.contains(wsSubject.getId()))
-                                .toArray(WsSubject[]::new);
-
-                        filteredResult.setWsSubjects(filteredSubjects);
-                        return filteredResult;
-                    } else {
-                        return wsGetMembersResult;
-                    }
+    private WsGroup[] getWsGroups(List<OotbGrouping> groupings) {
+        return groupings.stream()
+                .map(g -> {
+                    WsGroup group = new WsGroup();
+                    group.setTypeOfGroup("group");
+                    group.setName(g.getName());
+                    group.setDisplayName(g.getDisplayName());
+                    group.setExtension(g.getExtension());
+                    group.setDisplayExtension(g.getDisplayExtension());
+                    group.setDescription(g.getDescription());
+                    return group;
                 })
-                .toArray(WsGetMembersResult[]::new);
-        getMembersResults.getWsGetMembersResults().setResults(updatedWsGetMembersResults);
+                .toArray(WsGroup[]::new);
     }
 
-    public GroupSaveResults updateDescription(String groupPath, String description) {
-        WsFindGroupsResults wsFindGroupsResults = getFindGroupsResults().getWsFindGroupsResults();
-        WsGroup[] groups = wsFindGroupsResults.getGroupResults();
+    private List<WsGroup> getGroups(List<OotbGrouping> groupings) {
+        Map<String, WsGroup> uniqueGroups = groupings.stream()
+                .map(g -> {
+                    WsGroup group = new WsGroup();
+                    String filteredName = PathFilter.parentGroupingPath(g.getName());
+                    group.setName(filteredName);
+                    group.setDisplayName(filteredName);
+                    group.setExtension("extension");
+                    group.setDisplayExtension("extension");
+                    group.setDescription(g.getDescription());
+                    return group;
+                })
+                .collect(Collectors.toMap(
+                        WsGroup::getName,
+                        group -> group,
+                        (existing, replacement) -> existing // Remove duplicated parentGroupingPath
+                ));
 
-        if (groups.length == 0) {
-            return new GroupSaveResults();
+        return new ArrayList<>(uniqueGroups.values());
+    }
+
+    private void addNewGroupMemberResult(WsGroup wsGroup, String extension) {
+        WsGetMembersResult[] currentResults = wsGetMembersResultsList();
+
+        Optional<WsGetMembersResult> existingResult = Arrays.stream(currentResults)
+                .filter(result -> result.getWsGroup() != null && (wsGroup.getName() + ":" + extension).equals(
+                        result.getWsGroup().getName()))
+                .findFirst();
+
+        if (existingResult.isEmpty()) {
+            WsGetMembersResult newResult = new WsGetMembersResult();
+            WsGroup WsGroupWithExtension = new WsGroup();
+            WsGroupWithExtension.setName(wsGroup.getName() + ":" + extension);
+            WsGroupWithExtension.setDisplayName(wsGroup.getName() + ":" + extension);
+            WsGroupWithExtension.setExtension(extension);
+            WsGroupWithExtension.setDisplayExtension(extension);
+            newResult.setWsGroup(WsGroupWithExtension);
+            newResult.setWsSubjects(new WsSubject[0]);
+
+            List<WsGetMembersResult> resultList = new ArrayList<>(Arrays.asList(currentResults));
+            resultList.add(newResult);
+
+            getMembersResults.getWsGetMembersResults().setResults(resultList.toArray(new WsGetMembersResult[0]));
+        }
+    }
+
+    private List<WsSubject> convertOotbMemberListToWsSubject(List<OotbMember> ootbMemberList) {
+        return ootbMemberList.stream().map(ootbMember -> {
+            WsSubject ootbMemberSubject = new WsSubject();
+            ootbMemberSubject.setId(ootbMember.getUhUuid());
+            ootbMemberSubject.setName(ootbMember.getName());
+            ootbMemberSubject.setIdentifierLookup(ootbMember.getUid());
+            ootbMemberSubject.setAttributeValues(
+                    new String[] { ootbMember.getUid(), "", "LAST NAME", "FIRST NAME" });
+            ootbMemberSubject.setSuccess("T");
+            ootbMemberSubject.setResultCode("SUCCESS");
+            ootbMemberSubject.setSourceId("UH core LDAP");
+            return ootbMemberSubject;
+        }).toList();
+    }
+
+    private WsGroup[] mergeGroups(WsGetGroupsResult result, WsGroup newGroup) {
+        WsGroup[] existingGroups = result.getWsGroups();
+        if (existingGroups == null) {
+            return new WsGroup[] { newGroup };
         }
 
-        Arrays.stream(groups)
-                .filter(group -> group.getName() != null && group.getName().equals(groupPath))
-                .findFirst()
-                .ifPresent(group -> group.setDescription(description));
+        boolean groupExists = Arrays.stream(existingGroups)
+                .anyMatch(group -> group.getName().equals(newGroup.getName()) && group.getExtension()
+                        .equals(newGroup.getExtension()));
 
-        return getGroupSaveResults();
+        if (groupExists) {
+            return existingGroups;
+        }
+
+        WsGroup[] updatedGroups = Arrays.copyOf(existingGroups, existingGroups.length + 1);
+        updatedGroups[existingGroups.length] = newGroup;
+        return updatedGroups;
+    }
+
+    private WsGroup createWsGroup(String groupName, String extension) {
+        WsGroup newGroup = new WsGroup();
+        newGroup.setName(groupName + ":" + extension);
+        newGroup.setDisplayName(groupName + ":" + extension);
+        newGroup.setExtension(extension);
+        newGroup.setDisplayExtension(extension);
+        newGroup.setTypeOfGroup("group");
+        return newGroup;
+    }
+
+    private List<String> getMembersOfMembership(String membership) {
+        GetMembersResults getMembersResults1 = getOwnedGroupings(Collections.singletonList(membership));
+
+        return getMembersResults1.getMembersResults().stream()
+                .flatMap(getMembersResult -> getMembersResult.getSubjects().stream())
+                .map(Subject::getUid)
+                .collect(Collectors.toList());
+    }
+
+    private boolean hasAttributeAssign(WsAttributeAssign wsAttributeAssign, String groupName, String attributeName,
+            String uid) {
+        return groupName.equals(wsAttributeAssign.getOwnerGroupName()) &&
+                attributeName.equals(wsAttributeAssign.getAttributeDefNameName()) &&
+                (wsAttributeAssign.getOwnerMemberSubjectId() == null ||
+                        wsAttributeAssign.getOwnerMemberSubjectId().equals(uid));
     }
 }
 
